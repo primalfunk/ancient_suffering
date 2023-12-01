@@ -1,7 +1,7 @@
 class Player:
     def __init__(self, start_room):
         self.x, self.y = start_room.x, start_room.y
-        self.name = "Adventurer"
+        self.name = "PLAYER"
         self.str = 0 # strength
         self.dex = 0 # dexterity
         self.int = 0 # intelligence

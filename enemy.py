@@ -13,6 +13,7 @@ class Enemy:
         self.hp = 30
         self.mp = 10
         self.speed = 2 # count of player moves required before this character moves
+        self.aggro = False
 
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
@@ -22,3 +23,10 @@ class Enemy:
         if direction in current_room.connections and current_room.connections[direction] is not None:
             return True
         return False
+    
+    def check_aggro(self, player_x, player_y):
+        distance = ((self.x - player_x) ** 2 + (self.y - player_y) ** 2) ** 0.5
+        if distance <= 3:
+            self.aggro = True
+        else:
+            self.aggro = False

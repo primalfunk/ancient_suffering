@@ -69,18 +69,14 @@ class Map:
     def randomized_dfs(self, current_room, previous_direction, straight_path_count, visited=None):
         if visited is None:
             visited = set()
-
         visited.add(current_room)
         directions = ['n', 'e', 's', 'w']
         random.shuffle(directions)  # Randomize the direction order
-
         for direction in directions:
             next_room = self.get_adjacent_room(current_room, direction)
-
             if next_room and next_room not in visited:
                 new_straight_path_count = straight_path_count + 1 if direction == previous_direction else 0
-
-                if new_straight_path_count <= 5:  # Limit straight paths to 5 rooms
+                if new_straight_path_count <= 4:
                     self.establish_connection(current_room, next_room)
                     self.randomized_dfs(next_room, direction, new_straight_path_count, visited)
 
@@ -102,7 +98,6 @@ class Map:
                 direction, opposite_direction = 'e', 'w'
             else:
                 direction, opposite_direction = 'w', 'e'
-        # Update connections in the connections dictionary
         if direction and opposite_direction:
             self.connections.setdefault(room1.room_id, {})[direction] = room2.room_id
             self.connections.setdefault(room2.room_id, {})[opposite_direction] = room1.room_id
