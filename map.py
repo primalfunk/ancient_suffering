@@ -13,6 +13,13 @@ class Map:
         self.populate_grid()
         self.generate_map()
 
+    def generate_map(self):
+        self.populate_grid()
+        self.irregularize_outline()
+        self.create_holes()
+        self.ensure_connectivity() 
+        self.remove_invalid_connections()
+
     def create_holes(self):
         max_holes = self.size // 6
         hole_radius = self.size // 10
@@ -56,19 +63,31 @@ class Map:
                 break  # Stop after connecting to one valid room
 
     def establish_initial_connections(self):
-        for room in self.rooms.values():
-            adjacent_rooms = self.get_adjacent_rooms(room)
-            if adjacent_rooms['n'] and adjacent_rooms['e']:
-                # Randomly choose between a vertical or horizontal connection
-                if random.choice(['vertical', 'horizontal']) == 'vertical':
-                    self.establish_connection(room, adjacent_rooms['n'])
-                else:
-                    self.establish_connection(room, adjacent_rooms['e'])
-            else:
-                if adjacent_rooms['n']:
-                    self.establish_connection(room, adjacent_rooms['n'])
-                if adjacent_rooms['e']:
-                    self.establish_connection(room, adjacent_rooms['e'])
+        start = next(iter(self.rooms.values()))  # Start from any room
+        self.randomized_dfs(start, None, 0)
+
+    def randomized_dfs(self, current_room, previous_direction, straight_path_count, visited=None):
+        if visited is None:
+            visited = set()
+
+        visited.add(current_room)
+        directions = ['n', 'e', 's', 'w']
+        random.shuffle(directions)  # Randomize the direction order
+
+        for direction in directions:
+            next_room = self.get_adjacent_room(current_room, direction)
+
+            if next_room and next_room not in visited:
+                new_straight_path_count = straight_path_count + 1 if direction == previous_direction else 0
+
+                if new_straight_path_count <= 5:  # Limit straight paths to 5 rooms
+                    self.establish_connection(current_room, next_room)
+                    self.randomized_dfs(next_room, direction, new_straight_path_count, visited)
+
+    def get_adjacent_room(self, room, direction):
+        dx, dy = {'n': (0, -1), 's': (0, 1), 'e': (1, 0), 'w': (-1, 0)}.get(direction, (0, 0))
+        adjacent_pos = (room.x + dx, room.y + dy)
+        return self.rooms.get(adjacent_pos)
 
     def establish_connection(self, room1, room2):
         direction = None
@@ -111,13 +130,6 @@ class Map:
             if adjacent_pos in self.rooms:
                 neighbors[direction] = self.rooms[adjacent_pos]
         return neighbors
-
-    def generate_map(self):
-        self.populate_grid()
-        self.irregularize_outline()
-        self.create_holes()
-        self.ensure_connectivity() 
-        self.remove_invalid_connections()
 
     def irregularize_outline(self):
         edges = [

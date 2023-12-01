@@ -1,17 +1,18 @@
-class Player:
+class Enemy:
     def __init__(self, start_room):
         self.x, self.y = start_room.x, start_room.y
-        self.name = "Adventurer"
+        self.name = "Enemy"
         self.str = 0 # strength
         self.dex = 0 # dexterity
         self.int = 0 # intelligence
         self.wis = 0 # wisdom
         self.con = 0 # constitution
         self.cha = 0 # charisma
-        self.exp = 0 # experience
+        self.exp = 30 # experience reward for player
         self.level = 0
-        self.hp = 50
+        self.hp = 30
         self.mp = 10
+        self.speed = 2 # count of player moves required before this character moves
 
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
