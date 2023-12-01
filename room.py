@@ -4,6 +4,7 @@ class Room:
         self.x = x
         self.y = y
         self.connections = {'n': None, 's': None, 'e': None, 'w': None}
+        self.lit = 0
 
     def connect(self, direction, room):
         opposites = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}

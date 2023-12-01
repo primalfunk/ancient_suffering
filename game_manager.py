@@ -37,6 +37,8 @@ class GameManager:
         if direction and self.player.can_move(direction, self.game_map):
             new_room = self.game_map.rooms[(self.player.x, self.player.y)].connections[direction]
             self.player.move_to_room(new_room)
+            self.map_visualizer.explored.add((new_room.x, new_room.y))
+            self.map_visualizer.update_light_levels(visibility_radius=3)
         else:
             print("You can't go that way.")
 
@@ -47,12 +49,8 @@ class GameManager:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    self.handle_player_movement(event)
+                    self.handle_player_movement(event)  # Ensure this is being called
 
-            self.screen.fill((255, 255, 255))  # Clear screen
-            # Draw the map
+            self.screen.fill((0, 0, 0))  # Set background to black
             self.map_visualizer.draw_map(self.screen)
-
             pygame.display.flip()
-
-        pygame.quit()
