@@ -12,16 +12,14 @@ class MapVisualizer:
         self.explored = set() 
         self.explored.add((player.x, player.y))
 
-    def draw_map(self, screen):
+    def draw_map(self, screen, offset_x = 0):
         visibility_radius = 3
         self.update_light_levels(visibility_radius)
         enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemies}
-
         for room in self.game_map.rooms.values():
-            x = room.x * (self.cell_size + self.connection_size) + self.padding
+            x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
             y = room.y * (self.cell_size + self.connection_size) + self.padding
             room_pos = (room.x, room.y)
-
             # Check if room is within visibility radius
             if room.lit > 0:
                 if room_pos == (self.player.x, self.player.y):
@@ -36,8 +34,6 @@ class MapVisualizer:
                     room_color = self.get_color_intensity(base_room_color, room.lit)
             else:
                 room_color = (0, 0, 0)  # Default color for unexplored/hidden rooms
-
-
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))
 
             # Draw connections if the connected room is explored

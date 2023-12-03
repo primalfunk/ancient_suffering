@@ -12,30 +12,21 @@ class Room:
     def __init__(self, room_id, x, y):
         if not Room.word_lists:  # Load words if not already loaded
             Room.load_words()
+        self.country = self._select_word(self.country)
+        print(self.country)
         self.room_id = room_id
         self.x = x
         self.y = y
         self.name = ""
         self.connections = {'n': None, 's': None, 'e': None, 'w': None}
         self.lit = 0
-        # Copy word lists for this instance
-        self.adjectives = Room.word_lists['adjectives'].copy()
-        self.nouns = Room.word_lists['nouns'].copy()
-        self.adverbs = Room.word_lists['adverbs'].copy()
-        self.verbs = Room.word_lists['verbs'].copy()
+        self.generate_name()
 
     def generate_name(self):
         adjective = self._select_word(self.adjectives)
-        noun = self._select_word(self.nouns)
-        adverb = self._select_word(self.adverbs)
-        verb = self._select_word(self.verbs)
-        words = [adjective, adverb, noun, verb]
-        result = []
-        for word in words:
-            word = word.lower()
-            result.append(word)
-        random.shuffle(result)
-        self.name = " ".join(result)
+        words = self._select_word(self.countries)
+        self.name = " ".join(words)
+        self.name = self.name.title()
 
     def _select_word(self, word_list):
         if not word_list:
@@ -47,8 +38,6 @@ class Room:
         self.connections[direction] = room
         room.connections[opposites[direction]] = self
 
-# Example Usage
 for i in range(1, 10):
-    room1 = Room(i, 0, 0)
-    room1.generate_name()
-    print(f"Room Name: {room1.name}")
+    room = Room(1, i, 0)
+    print(room.name)

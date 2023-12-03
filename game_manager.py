@@ -11,22 +11,22 @@ class GameManager:
         # Set up the game map and visualizer
         self.game_map = game_map
         start_room = random.choice(list(game_map.rooms.values()))
+        print(f"start room is {start_room}, room name is {start_room.name}")
         self.player = Player(start_room)
         self.player_move_count = 0
         self.enemies = []
-        self.spawn_enemies(5)
+        self.spawn_enemies(10)
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
         # Calculate window size based on map size, connection size, and padding
         cell_size = 30
         connection_size = cell_size // 3
         padding = 10
         window_size = game_map.size * cell_size + (game_map.size - 1) * connection_size + padding * 2
-        # I want this class attribute
         self.window_width = window_size
         self.window_height = window_size + 160
-
+        self.window_width *= 2
         # Create the Pygame window
-        self.screen = pygame.display.set_mode([window_size, self.window_height])
+        self.screen = pygame.display.set_mode([self.window_width, self.window_height])
         pygame.display.set_caption("Map Visualization")
 
     def handle_player_movement(self, event):
@@ -67,57 +67,6 @@ class GameManager:
             new_room = self.game_map.rooms[(enemy.x, enemy.y)].connections[direction]
             enemy.move_to_room(new_room)
 
-    def display_player_stats(self):
-        custom_font = pygame.font.Font('customfont.ttf', 20)
-        stats_surface = pygame.Surface((self.window_height - 160, 160))
-        stats_surface.fill((50, 50, 50))
-        first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
-        second_column_attributes = ['str', 'dex', 'int', 'wis', 'con', 'cha']
-        third_column_attributes = ['x', 'y']
-
-        for i, attr in enumerate(first_column_attributes):
-            color = (170, 190, 255)
-            text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, color)
-            stats_surface.blit(text_surface, (10, 20 * i))
-
-        # Render second column
-        column_offset = self.window_width // 3  # Horizontal offset for the second column
-        for i, attr in enumerate(second_column_attributes):
-            text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
-            stats_surface.blit(text_surface, (column_offset, 20 * i))
-
-        # Render third column
-        column_offset = 2 * self.window_width // 3 # Horizontal offset for the second column
-        for i, attr in enumerate(third_column_attributes):
-            if attr == 'x':
-                text = f"LATITUDE: {getattr(self.player, attr)}"
-            elif attr == 'y':
-                text = f"LONGITUDE: {getattr(self.player, attr)}"
-            else:
-                text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
-            stats_surface.blit(text_surface, (column_offset, 20 * i))
-
-        # Blit the stats surface onto the main screen
-        self.screen.blit(stats_surface, (0, self.window_height - 160))
-
-    def run_game_loop(self):
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    self.handle_player_movement(event)
-                    self.move_enemies()  # Move enemies after player moves
-                    self.update_enemies_aggro()
-            self.screen.fill((0, 0, 0))
-            self.map_visualizer.draw_map(self.screen)
-            self.display_player_stats() 
-            pygame.display.flip()
-
     def spawn_enemies(self, count):
         for _ in range(count):  # Spawn count enemies
             while True:
@@ -154,7 +103,6 @@ class GameManager:
                 if distance < min_distance:
                     min_distance = distance
                     best_direction = direction
-
         return best_direction
 
     def direction_to_delta(self, direction):
@@ -164,3 +112,70 @@ class GameManager:
             'e': (1, 0),
             'w': (-1, 0)
         }.get(direction, (0, 0))
+    
+    def display_room_info(self):
+        room_info_surface = pygame.Surface((self.window_width // 2, self.window_height))
+        room_info_surface.fill((0, 0, 0))
+        # Set custom font and render room name
+        custom_font = pygame.font.Font('customfont.ttf', 20)
+
+        room_name = self.player.current_room.name
+        text_surface = custom_font.render(room_name, True, (255, 255, 255))  # White text
+        room_info_surface.blit(text_surface, (10, 10))  # Position text with padding
+        # Draw a light green border around the room_info_surface
+        border_color = (144, 238, 144)  # Light green color
+        border_width = 1  # Border thickness
+        pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), border_width)
+        # Blit the room info surface onto the main screen, on the left side
+        self.screen.blit(room_info_surface, (0, 0))
+
+    def display_player_stats(self):
+        custom_font = pygame.font.Font('customfont.ttf', 20)
+        stats_surface = pygame.Surface((self.window_height - 160, 160))
+        stats_surface.fill((50, 50, 50))
+        first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
+        second_column_attributes = ['str', 'dex', 'int', 'wis', 'con', 'cha']
+        third_column_attributes = ['x', 'y']
+        for i, attr in enumerate(first_column_attributes):
+            color = (170, 190, 255)
+            text = f"{attr.upper()}: {getattr(self.player, attr)}"
+            text_surface = custom_font.render(text, True, color)
+            stats_surface.blit(text_surface, (10, 20 * i))
+        # Render second column
+        column_offset = self.window_width // 3  # Horizontal offset for the second column
+        for i, attr in enumerate(second_column_attributes):
+            text = f"{attr.upper()}: {getattr(self.player, attr)}"
+            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
+            stats_surface.blit(text_surface, (column_offset, 20 * i))
+        # Render third column
+        column_offset = 2 * self.window_width // 3 # Horizontal offset for the second column
+        for i, attr in enumerate(third_column_attributes):
+            if attr == 'x':
+                text = f"LATITUDE: {getattr(self.player, attr)}"
+            elif attr == 'y':
+                text = f"LONGITUDE: {getattr(self.player, attr)}"
+            else:
+                text = f"{attr.upper()}: {getattr(self.player, attr)}"
+            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
+            stats_surface.blit(text_surface, (column_offset, 20 * i))
+        # Blit the stats surface onto the main screen
+        half_window_width = self.window_width // 2
+        self.screen.blit(stats_surface, (half_window_width, self.window_height - 160))
+
+    def run_game_loop(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    self.handle_player_movement(event)
+                    self.move_enemies()
+                    self.update_enemies_aggro()
+
+            self.screen.fill((0, 0, 0))
+            self.display_room_info()
+            half_window_width = self.window_width // 2
+            self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
+            self.display_player_stats()
+            pygame.display.flip()

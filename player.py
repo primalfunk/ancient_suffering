@@ -1,6 +1,7 @@
 class Player:
     def __init__(self, start_room):
         self.x, self.y = start_room.x, start_room.y
+        self.current_room = start_room
         self.name = "PLAYER"
         self.str = 0 # strength
         self.dex = 0 # dexterity
@@ -15,6 +16,7 @@ class Player:
 
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
+        self.current_room = new_room
 
     def can_move(self, direction, game_map):
         current_room = game_map.rooms[(self.x, self.y)]
