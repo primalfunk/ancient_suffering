@@ -3,12 +3,11 @@ from player import Player
 import pygame
 import random
 from map_visualizer import MapVisualizer
+from ui import UI
 
 class GameManager:
     def __init__(self, game_map):
-        # Initialize Pygame
         pygame.init()
-        # Set up the game map and visualizer
         self.game_map = game_map
         start_room = random.choice(list(game_map.rooms.values()))
         self.player = Player(start_room)
@@ -16,7 +15,6 @@ class GameManager:
         self.enemies = []
         self.spawn_enemies(10)
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
-        # Calculate window size based on map size, connection size, and padding
         cell_size = 25
         connection_size = cell_size // 3
         padding = 2
@@ -24,9 +22,9 @@ class GameManager:
         self.window_width = window_size
         self.window_height = window_size + 160
         self.window_width *= 2
-        # Create the Pygame window
         self.screen = pygame.display.set_mode([self.window_width, self.window_height])
-        pygame.display.set_caption("Map Visualization")
+        pygame.display.set_caption("Journey to a Finished Game")
+        self.ui = UI(self.screen, self.player, self.window_width, self.window_height)
 
     def handle_player_movement(self, event):
         direction = None
@@ -66,23 +64,6 @@ class GameManager:
             new_room = self.game_map.rooms[(enemy.x, enemy.y)].connections[direction]
             enemy.move_to_room(new_room)
 
-    def spawn_enemies(self, count):
-        for _ in range(count):  # Spawn count enemies
-            while True:
-                potential_start = random.choice(list(self.game_map.rooms.values()))
-                if self.is_valid_spawn(potential_start):
-                    enemy = Enemy(potential_start)
-                    self.enemies.append(enemy)
-                    break
-        print(f"Spawned enemies: {self.enemies}")
-
-    def is_valid_spawn(self, start_room):
-        # Check distance from player and other enemies
-        for other in [self.player] + self.enemies:
-            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
-                return False
-        return True
-    
     def update_enemies_aggro(self):
         player_x, player_y = self.player.x, self.player.y
         for enemy in self.enemies:
@@ -109,51 +90,23 @@ class GameManager:
             'e': (1, 0),
             'w': (-1, 0)
         }.get(direction, (0, 0))
-    
-    def display_room_info(self):
-        room_info_surface = pygame.Surface((self.window_width // 2, self.window_height))
-        room_info_surface.fill((0, 0, 0))
-        custom_font = pygame.font.Font('customfont.ttf', 20)
-        to_render = self.player.current_room.region + ": " + self.player.current_room.name
-        text_surface = custom_font.render(to_render, True, (255, 255, 255))  # White text
-        room_info_surface.blit(text_surface, (10, 10))  # Position text with padding
-        border_color = (144, 238, 144)  # Light green color
-        border_width = 1  # Border thickness
-        pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), border_width)
-        self.screen.blit(room_info_surface, (0, 0))
+   
+    def spawn_enemies(self, count):
+        for _ in range(count):  # Spawn count enemies
+            while True:
+                potential_start = random.choice(list(self.game_map.rooms.values()))
+                if self.is_valid_spawn(potential_start):
+                    enemy = Enemy(potential_start)
+                    self.enemies.append(enemy)
+                    break
+        print(f"Spawned enemies: {self.enemies}")
 
-    def display_player_stats(self):
-        custom_font = pygame.font.Font('customfont.ttf', 20)
-        stats_surface = pygame.Surface((self.window_height - 160, 160))
-        stats_surface.fill((50, 50, 50))
-        first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
-        second_column_attributes = ['str', 'dex', 'int', 'wis', 'con', 'cha']
-        third_column_attributes = ['x', 'y']
-        for i, attr in enumerate(first_column_attributes):
-            color = (170, 190, 255)
-            text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, color)
-            stats_surface.blit(text_surface, (10, 20 * i))
-        # Render second column
-        column_offset = self.window_width // 3  # Horizontal offset for the second column
-        for i, attr in enumerate(second_column_attributes):
-            text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
-            stats_surface.blit(text_surface, (column_offset, 20 * i))
-        # Render third column
-        column_offset = 2 * self.window_width // 3 # Horizontal offset for the second column
-        for i, attr in enumerate(third_column_attributes):
-            if attr == 'x':
-                text = f"LATITUDE: {getattr(self.player, attr)}"
-            elif attr == 'y':
-                text = f"LONGITUDE: {getattr(self.player, attr)}"
-            else:
-                text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, (170, 190, 255))  # White text
-            stats_surface.blit(text_surface, (column_offset, 20 * i))
-        # Blit the stats surface onto the main screen
-        half_window_width = self.window_width // 2
-        self.screen.blit(stats_surface, (half_window_width, self.window_height - 160))
+    def is_valid_spawn(self, start_room):
+        # Check distance from player and other enemies
+        for other in [self.player] + self.enemies:
+            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
+                return False
+        return True
 
     def run_game_loop(self):
         running = True
@@ -167,8 +120,8 @@ class GameManager:
                     self.update_enemies_aggro()
 
             self.screen.fill((0, 0, 0))
-            self.display_room_info()
+            self.ui.display_room_info()
             half_window_width = self.window_width // 2
             self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
-            self.display_player_stats()
+            self.ui.display_player_stats()
             pygame.display.flip()

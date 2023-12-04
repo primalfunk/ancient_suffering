@@ -65,7 +65,7 @@
             ]
         },
         "desert": {
-            "total_zones": 20,
+            "total_zones": 12,
             "zone_names": [
                 "Sandy Dunes",
                 "Scorched Oasis",
@@ -690,7 +690,7 @@
             ]
         },
         "ancient_temple": {
-            "total_zones": 5,
+            "total_zones": 8,
             "zone_names": [
                 "Forgotten Altar",
                 "Relic Chambers",
@@ -740,7 +740,7 @@
             ]
         },
         "wizards_academy": {
-            "total_zones": 7,
+            "total_zones": 8,
             "zone_names": [
                 "Enchanted Hall",
                 "Potion Classroom",
@@ -890,7 +890,7 @@
             ]
         },
         "pirate_haven": {
-            "total_zones": 5,
+            "total_zones": 7,
             "zone_names": [
                 "Buccaneer Bay",
                 "Smuggler's Cove",
@@ -915,7 +915,7 @@
             ]
         },
         "forgotten_catacombs": {
-            "total_zones": 9,
+            "total_zones": 11,
             "zone_names": [
                 "Bone Chamber",
                 "Crypt Corridor",
@@ -1038,6 +1038,10 @@
                 "Firebrand Falls",
                 "Charred Chasm"
             ]
+        },
+        "passing_through": {
+            "total_zones": 1,
+            "zone_names": ["featureless space", "unremarkable place", "uninteresting spot", "boring road", "insignificant path"]
         }
     },
     "adjectives": {
@@ -1320,15 +1324,14 @@
         ],
         "tools": [
             "lantern",
-            "map",
-            "gold",
+            "backpack",
             "wood",
             "flint"
         ],
         "natural_elements": [
             "tree",
             "river",
-            "stone",
+            "pile of pebbles",
             "flower",
             "bush",
             "shrub",

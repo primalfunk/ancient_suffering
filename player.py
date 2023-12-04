@@ -13,6 +13,7 @@ class Player:
         self.level = 0
         self.hp = 50
         self.mp = 10
+        self.inventory = []
 
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y

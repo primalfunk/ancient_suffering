@@ -1,8 +1,5 @@
 from collections import deque
-import json
-from map_namer import MapNamer
-from player import Player
-import pygame
+from map_elaborator import MapElaborator
 import random
 from room import Room
 
@@ -14,7 +11,7 @@ class Map:
         self.connections = {}
         self.populate_grid()
         self.generate_map()
-        map_namer = MapNamer(self, 'words.json')
+        MapElaborator(self, 'words.json')
 
     def generate_map(self):
         self.populate_grid()
@@ -24,7 +21,7 @@ class Map:
         self.remove_invalid_connections()
 
     def create_holes(self):
-        max_holes = self.size // 6
+        max_holes = self.size // 5
         hole_radius = self.size // 10
         for _ in range(max_holes):
             center_x = random.randint(hole_radius, self.size - hole_radius)

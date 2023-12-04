@@ -34,14 +34,13 @@ class MapVisualizer:
         return self.hsv_to_rgb(hue, saturation, value)
 
     def draw_map(self, screen, offset_x = 0):
-        visibility_radius = 3
+        visibility_radius = 3 # default 3, + 2 with torch
         self.update_light_levels(visibility_radius)
         enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemies}
         for room in self.game_map.rooms.values():
             x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
             y = room.y * (self.cell_size + self.connection_size) + self.padding
             room_pos = (room.x, room.y)
-            # Check if room is within visibility radius
             if room.lit > 0:
                 region_index = self.region_color_mapping.get(room.region, 0)
                 base_room_color = self.region_colors[region_index]
@@ -53,14 +52,15 @@ class MapVisualizer:
                     # Apply gradient effect for enemy rooms based on light level
                     base_enemy_color = (255, 0, 0)  # Red color for enemy rooms
                     room_color = self.get_color_intensity(base_enemy_color, room.lit)
+                self.draw_connectionless_edges(screen, room, x, y)
             else:
                 room_color = (0, 0, 0)  # Default color for unexplored/hidden rooms
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))
-
             # Draw connections if the connected room is explored
             for direction, connected_room in room.connections.items():
                 if connected_room and (connected_room.x, connected_room.y) in self.explored:
                     self.draw_connection(screen, x, y, direction)
+            
 
     def update_light_levels(self, visibility_radius):
         for dx in range(-visibility_radius, visibility_radius + 1):
@@ -85,6 +85,18 @@ class MapVisualizer:
             connection_rect = (x + self.cell_size / 3, y - self.connection_size, self.connection_size, self.connection_size)
         pygame.draw.rect(screen, (150, 150, 150), connection_rect)
     
+    def draw_connectionless_edges(self, screen, room, x, y):
+        border_color = (30, 30, 30)  # Dark color
+        border_width = 5
+        if 'n' not in room.connections or room.connections['n'] is None:
+            pygame.draw.line(screen, border_color, (x, y), (x + self.cell_size, y), border_width)
+        if 's' not in room.connections or room.connections['s'] is None:
+            pygame.draw.line(screen, border_color, (x, y + self.cell_size), (x + self.cell_size, y + self.cell_size), border_width)
+        if 'e' not in room.connections or room.connections['e'] is None:
+            pygame.draw.line(screen, border_color, (x + self.cell_size, y), (x + self.cell_size, y + self.cell_size), border_width)
+        if 'w' not in room.connections or room.connections['w'] is None:
+            pygame.draw.line(screen, border_color, (x, y), (x, y + self.cell_size), border_width)
+
     def calculate_distance(self, x1, y1, x2, y2):
         return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
