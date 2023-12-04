@@ -11,16 +11,15 @@ class GameManager:
         # Set up the game map and visualizer
         self.game_map = game_map
         start_room = random.choice(list(game_map.rooms.values()))
-        print(f"start room is {start_room}, room name is {start_room.name}")
         self.player = Player(start_room)
         self.player_move_count = 0
         self.enemies = []
         self.spawn_enemies(10)
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
         # Calculate window size based on map size, connection size, and padding
-        cell_size = 30
+        cell_size = 25
         connection_size = cell_size // 3
-        padding = 10
+        padding = 2
         window_size = game_map.size * cell_size + (game_map.size - 1) * connection_size + padding * 2
         self.window_width = window_size
         self.window_height = window_size + 160
@@ -88,8 +87,6 @@ class GameManager:
         player_x, player_y = self.player.x, self.player.y
         for enemy in self.enemies:
             enemy.check_aggro(player_x, player_y)
-            if enemy.aggro:
-                print("Aggro!")
 
     def calculate_direction_towards_player(self, enemy, player):
         best_direction = None
@@ -116,17 +113,13 @@ class GameManager:
     def display_room_info(self):
         room_info_surface = pygame.Surface((self.window_width // 2, self.window_height))
         room_info_surface.fill((0, 0, 0))
-        # Set custom font and render room name
         custom_font = pygame.font.Font('customfont.ttf', 20)
-
-        room_name = self.player.current_room.name
-        text_surface = custom_font.render(room_name, True, (255, 255, 255))  # White text
+        to_render = self.player.current_room.region + ": " + self.player.current_room.name
+        text_surface = custom_font.render(to_render, True, (255, 255, 255))  # White text
         room_info_surface.blit(text_surface, (10, 10))  # Position text with padding
-        # Draw a light green border around the room_info_surface
         border_color = (144, 238, 144)  # Light green color
         border_width = 1  # Border thickness
         pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), border_width)
-        # Blit the room info surface onto the main screen, on the left side
         self.screen.blit(room_info_surface, (0, 0))
 
     def display_player_stats(self):

@@ -1,3 +1,4 @@
+import colorsys
 import pygame
 
 class MapVisualizer:
@@ -5,12 +6,32 @@ class MapVisualizer:
         self.game_manager = game_manager
         self.game_map = game_map
         self.player = player
-        self.cell_size = 30  # Size of each cell
+        self.cell_size = 25  # Size of each cell
         self.border_width = 2  # Width of the border around each room
         self.connection_size = self.cell_size // 3  # Size of the connections
-        self.padding = 10  # Padding around the map
+        self.padding = 2  # Padding around the map
+        self.region_color_mapping, self.region_colors = self.generate_region_colors()
         self.explored = set() 
         self.explored.add((player.x, player.y))
+
+    def generate_region_colors(self):
+        unique_regions = list(set(room.region for room in self.game_map.rooms.values()))
+        num_regions = len(unique_regions)
+        region_color_mapping = {region: i for i, region in enumerate(unique_regions)}
+        colors = [self.adjusted_hsv_to_rgb(i / num_regions) for i in range(num_regions)]
+        return region_color_mapping, colors
+
+    def hsv_to_rgb(self, h, s, v):
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return int(r * 255), int(g * 255), int(b * 255)
+
+    def adjusted_hsv_to_rgb(self, hue_fraction):
+        # Adjust the hue to avoid red and blue
+        hue = (hue_fraction * 0.6) + 0.2  # This range avoids red and blue
+        # Set saturation and value for more muted, calm colors
+        saturation = 0.5
+        value = 0.7
+        return self.hsv_to_rgb(hue, saturation, value)
 
     def draw_map(self, screen, offset_x = 0):
         visibility_radius = 3
@@ -22,16 +43,16 @@ class MapVisualizer:
             room_pos = (room.x, room.y)
             # Check if room is within visibility radius
             if room.lit > 0:
+                region_index = self.region_color_mapping.get(room.region, 0)
+                base_room_color = self.region_colors[region_index]
+                room_color = self.get_color_intensity(base_room_color, room.lit)
                 if room_pos == (self.player.x, self.player.y):
+                    pygame.draw.rect(screen, (255, 0, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2)
                     room_color = (0, 0, 255)  # Blue color for player's room
                 elif room_pos in enemy_positions:
                     # Apply gradient effect for enemy rooms based on light level
                     base_enemy_color = (255, 0, 0)  # Red color for enemy rooms
                     room_color = self.get_color_intensity(base_enemy_color, room.lit)
-                else:
-                    # Apply gradient effect for normal rooms based on light level
-                    base_room_color = (173, 216, 230)  # Light blue for normal rooms
-                    room_color = self.get_color_intensity(base_room_color, room.lit)
             else:
                 room_color = (0, 0, 0)  # Default color for unexplored/hidden rooms
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))

@@ -1,5 +1,6 @@
 from collections import deque
 import json
+from map_namer import MapNamer
 from player import Player
 import pygame
 import random
@@ -13,6 +14,7 @@ class Map:
         self.connections = {}
         self.populate_grid()
         self.generate_map()
+        map_namer = MapNamer(self, 'words.json')
 
     def generate_map(self):
         self.populate_grid()
@@ -142,18 +144,6 @@ class Map:
             for y in range(self.size):
                 self.create_room((x, y))
         self.establish_initial_connections() 
-
-    def print_map(self):
-        for y in range(self.size):
-            top_line, bottom_line = '', ''
-            for x in range(self.size):
-                room = self.rooms.get((x, y))
-                top_line += 'X' if room else ' '
-                top_line += '-' if room and room.connections.get('e') else ' '
-                bottom_line += '|' if room and room.connections.get('s') else ' '
-                bottom_line += ' '
-            print(top_line)
-            print(bottom_line)
 
     def remove_edge_segments(self, edge):
         segment_length = random.randint(2, self.size // 4)  # Random segment length
