@@ -8,7 +8,6 @@ class RegionAssignment:
         self.locations = location_data
         self.assign_regions()
         self.adjust_region_borders()
-        self.visualize_map(self.map)
 
     def assign_regions(self):
         unassigned_rooms = set(self.map.rooms.keys())
@@ -72,7 +71,6 @@ class RegionAssignment:
             unassigned_rooms.remove(pos)
 
     def count_region_neighbors(self, pos, region):
-        # Count how many neighbors have the same region
         count = 0
         for neighbor_pos in self.get_adjacent_positions(pos):
             neighbor_room = self.map.rooms.get(neighbor_pos)

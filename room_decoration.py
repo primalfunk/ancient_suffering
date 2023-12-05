@@ -1,70 +1,79 @@
 import json
 import random
+# from map import Map
 
 class RoomDecoration:
     def __init__(self, map_instance, decoration_data):
         self.map = map_instance
         self.decorations_data = decoration_data
+        self.decorate_rooms()
+        self.visualize_decorations()
 
     def decorate_rooms(self):
-        decorated_rooms_count = 0
-        total_rooms = len(self.map.rooms)
-        target_decorated_rooms = int(total_rooms * 0.3)
         for pos, room in self.map.rooms.items():
-            if decorated_rooms_count >= target_decorated_rooms:
-                break
-            room_type = self.determine_room_type(room.region)
-            room.decorations = self.select_decorations_for_room(room_type)
-            if room.decorations:
-                decorated_rooms_count += 1
+            if random.random() < 0.33:
+                room_type = self.determine_room_type(room.region)
+                room.decorations = self.select_decorations_for_room(room_type)
 
     def determine_room_type(self, region):
-        # Logic to determine the type of room based on the region
-        if region in ('town,' 'castle', 'village', 'mansion', 'neighborhood', 'metropolis'):
+        if region in ("clockwork_city", "coastal_town", "farming_village", "suburban_neighborhood", "downtown_city", "haunted_mansion", "cyberpunk_city", "steampunk_metropolis", "pirate_haven", "abandoned_city", "treetop_village", "frostbound_village"):
             return 'urban'
-        elif region in ('forest', 'plains', 'coastline', 'jungle', 'woods', 'meadow', 'marshlands', 'steppe', 'tree', 'garden'):
+        elif region in ("fiery_chasm", "nomadic_steppe", "frozen_wasteland", "volcanic_valley", "cursed_woods", "mirage_oasis", "labyrinth_gardens", "pine_forest", "dense_jungle", "quiet_lake", "grassy_plains", "mountain_campsite", "forest"):
             return 'outdoor'
-        elif region in ('magical', 'enchanted', 'elven', 'crystal', 'ancient'):
-            return 'magical-type'
-        elif region is None:
-            return 'any'
+        elif region in ("enchanted_forest", "crystal_caves", "mushroom_kingdom", "enchanted_valley", "crystal_canyon", "wizards_academy", "dwarven_kingdom", "ancient_temple", "magical_menagerie"):
+            return 'magical'
         else:
             return 'any'
 
     def select_decorations_for_room(self, room_type):
-        # Decide whether to add a group-specific or general item
-        group_specific_chance = 0.5 if room_type in ['urban', 'outdoor', 'magical-type'] else 0.25
-        if random.random() < group_specific_chance:
-            # Select a group-specific item
+        if random.random() < 0.75:
             decoration = self.get_group_specific_item(room_type)
         else:
-            # Select a general item based on remaining probabilities
-            decoration = self.get_general_item()
-
+            decoration = self.get_random_item('daily_life_items')
         return [decoration] if decoration else []
-
+                
     def get_group_specific_item(self, room_type):
         if room_type == 'urban':
             return self.get_random_item('furniture')
         elif room_type == 'outdoor':
-            return self.get_random_item('wildlife') or self.get_random_item('natural_elements')
-        elif room_type == 'magical-type':
+            return random.choice([self.get_random_item('wildlife'), self.get_random_item('natural_elements')])
+        elif room_type == 'magical':
             return self.get_random_item('mystic_items')
         return None
 
-    def get_general_item(self):
-        # 75% for daily_life_items, 15% for artifacts, 10% for mystic_items
-        random_choice = random.random()
-        if random_choice < 0.75:
-            return self.get_random_item('daily_life_items')
-        elif random_choice < 0.90:
-            return self.get_random_item('artifacts')
-        else:
-            return self.get_random_item('mystic_items')
-        
     def get_random_item(self, category):
-        # Randomly select one item from a category
         items = self.decorations_data['objects'][category]
         if items:
-            return random.choice(items)
+            selected_item = random.choice(items)
+            return selected_item
         return None
+
+    def visualize_decorations(self):
+        map_width = max(x for x, _ in self.map.rooms.keys()) + 1
+        map_height = max(y for _, y in self.map.rooms.keys()) + 1
+
+        for y in range(map_height):
+            for x in range(map_width):
+                room = self.map.rooms.get((x, y))
+                if room:
+                    if room.decorations:
+                        decoration = room.decorations[0]
+                        decoration_category = self.get_decoration_category(decoration)
+                        print(decoration_category[0].upper(), end='')
+                    else:
+                        print('x', end='')  # Room without decoration
+                else:
+                    print(' ', end='')  # No room
+            print()  # New line after each row
+
+    def get_decoration_category(self, decoration):
+        for category, items in self.decorations_data['objects'].items():
+            if decoration in items:
+                return category
+        return 'unknown'
+
+# test
+# with open('words.json', 'r') as file:
+#     data = json.load(file)
+# map_instance = Map(25)
+# RoomDecoration(map_instance, data)

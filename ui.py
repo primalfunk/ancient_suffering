@@ -56,7 +56,8 @@ class UI:
     def update_room_info_text(self):
         being = ['find yourself in ', 'are in ', 'have reached ', 'have arrived at ', 'are standing in ']
         room_name = self.player.current_room.name.lower() if self.player.current_room.name else "unknown place"
-        region_name = self.player.current_room.region.lower() if self.player.current_room.region else "unknown region"
+        region_name = self.player.current_room.region.replace('_', ' ') if self.player.current_room.region else "unknown region"
+        region_name = region_name.lower()
         items = self.player.current_room.decorations
 
         region_desc = f"You {random.choice(being)}{self.article_for_word(room_name)}{room_name} in {self.article_for_word(region_name)}{region_name}."
