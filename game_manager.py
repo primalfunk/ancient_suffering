@@ -24,18 +24,9 @@ class GameManager:
         self.window_width *= 2
         self.screen = pygame.display.set_mode([self.window_width, self.window_height])
         pygame.display.set_caption("Journey to a Finished Game")
-        self.ui = UI(self.screen, self.player, self.window_width, self.window_height)
+        self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
 
-    def handle_player_movement(self, event):
-        direction = None
-        if event.key == pygame.K_UP:
-            direction = 'n'
-        elif event.key == pygame.K_DOWN:
-            direction = 's'
-        elif event.key == pygame.K_LEFT:
-            direction = 'w'
-        elif event.key == pygame.K_RIGHT:
-            direction = 'e'
+    def move_player(self, direction):
         if direction and self.player.can_move(direction, self.game_map):
             self.player_move_count += 1
             new_room = self.game_map.rooms[(self.player.x, self.player.y)].connections[direction]
@@ -45,12 +36,50 @@ class GameManager:
         else:
             print("You can't go that way.")
 
-    def move_enemies(self):
-        for enemy in self.enemies:
-            if self.player_move_count % enemy.speed == 0:
-                if random.random() < 0.87:  # 87% chance to move
-                    self.move_enemy(enemy)
+    def run_game_loop(self):
+        running = True
+        while running:
+            events = pygame.event.get()  # Store the list of events
+            for event in events:
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    direction = None
+                    if event.key == pygame.K_UP:
+                        direction = 'n'
+                    elif event.key == pygame.K_DOWN:
+                        direction = 's'
+                    elif event.key == pygame.K_LEFT:
+                        direction = 'w'
+                    elif event.key == pygame.K_RIGHT:
+                        direction = 'e'
+                    if direction:
+                        self.move_player(direction)
+            self.ui.process_input(events) # pass processing of the events to the UI to handle mouse things
+            # Rest of the game loop
+            self.screen.fill((0, 0, 0))
+            self.ui.display_room_info()
+            half_window_width = self.window_width // 2
+            self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
+            self.ui.display_player_stats()
+            pygame.display.flip()
 
+    def spawn_enemies(self, count):
+        for _ in range(count):  # Spawn count enemies
+            while True:
+                potential_start = random.choice(list(self.game_map.rooms.values()))
+                if self.is_valid_spawn(potential_start):
+                    enemy = Enemy(potential_start)
+                    self.enemies.append(enemy)
+                    break
+
+    def is_valid_spawn(self, start_room):
+        # Check distance from player and other enemies
+        for other in [self.player] + self.enemies:
+            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
+                return False
+        return True
+    
     def move_enemy(self, enemy):
         if enemy.aggro:
             # Chase player logic
@@ -90,38 +119,9 @@ class GameManager:
             'e': (1, 0),
             'w': (-1, 0)
         }.get(direction, (0, 0))
-   
-    def spawn_enemies(self, count):
-        for _ in range(count):  # Spawn count enemies
-            while True:
-                potential_start = random.choice(list(self.game_map.rooms.values()))
-                if self.is_valid_spawn(potential_start):
-                    enemy = Enemy(potential_start)
-                    self.enemies.append(enemy)
-                    break
-        print(f"Spawned enemies: {self.enemies}")
-
-    def is_valid_spawn(self, start_room):
-        # Check distance from player and other enemies
-        for other in [self.player] + self.enemies:
-            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
-                return False
-        return True
-
-    def run_game_loop(self):
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    self.handle_player_movement(event)
-                    self.move_enemies()
-                    self.update_enemies_aggro()
-
-            self.screen.fill((0, 0, 0))
-            self.ui.display_room_info()
-            half_window_width = self.window_width // 2
-            self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
-            self.ui.display_player_stats()
-            pygame.display.flip()
+    
+    def move_enemies(self):
+        for enemy in self.enemies:
+            if self.player_move_count % enemy.speed == 0:
+                if random.random() < 0.87:  # 87% chance to move
+                    self.move_enemy(enemy)

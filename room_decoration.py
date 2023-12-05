@@ -1,13 +1,12 @@
 import json
 import random
-# from map import Map
 
 class RoomDecoration:
     def __init__(self, map_instance, decoration_data):
         self.map = map_instance
         self.decorations_data = decoration_data
         self.decorate_rooms()
-        self.visualize_decorations()
+        # self.visualize_decorations()
 
     def decorate_rooms(self):
         for pos, room in self.map.rooms.items():
@@ -52,6 +51,8 @@ class RoomDecoration:
         map_width = max(x for x, _ in self.map.rooms.keys()) + 1
         map_height = max(y for _, y in self.map.rooms.keys()) + 1
 
+        decoration_summary = {'F': 0, 'T': 0, 'N': 0, 'A': 0, 'W': 0, 'M': 0, 'D': 0}
+
         for y in range(map_height):
             for x in range(map_width):
                 room = self.map.rooms.get((x, y))
@@ -59,21 +60,22 @@ class RoomDecoration:
                     if room.decorations:
                         decoration = room.decorations[0]
                         decoration_category = self.get_decoration_category(decoration)
-                        print(decoration_category[0].upper(), end='')
+                        decoration_letter = decoration_category[0].upper()
+                        print(decoration_letter, end='')
+                        decoration_summary[decoration_letter] += 1
                     else:
                         print('x', end='')  # Room without decoration
                 else:
                     print(' ', end='')  # No room
             print()  # New line after each row
 
+        print("\nDecoration Summary:")
+        for category, count in decoration_summary.items():
+            print(f"{category}: {count}")
+
+
     def get_decoration_category(self, decoration):
         for category, items in self.decorations_data['objects'].items():
             if decoration in items:
                 return category
         return 'unknown'
-
-# test
-# with open('words.json', 'r') as file:
-#     data = json.load(file)
-# map_instance = Map(25)
-# RoomDecoration(map_instance, data)

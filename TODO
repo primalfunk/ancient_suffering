@@ -1,7 +1,1 @@
-Next: continue testing of the room_decoration methods to ensure we're getting what we expect, if satisfied then:
-
-1) add functionality to show inventory, pick up/drop items
-2) add equipment logic to weapons and armor
-3) work out combat functionality; multi-stage combat where the view of the map is replaced with the battle mode details
-
-and then some more stuff.
+Wire up the middle button fully and have it read the room state to get further on inventory
