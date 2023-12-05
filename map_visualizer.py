@@ -1,5 +1,6 @@
 import colorsys
 import pygame
+import random
 
 class MapVisualizer:
     def __init__(self, game_manager, game_map, player):
@@ -26,11 +27,12 @@ class MapVisualizer:
         return int(r * 255), int(g * 255), int(b * 255)
 
     def adjusted_hsv_to_rgb(self, hue_fraction):
-        # Adjust the hue to avoid red and blue
-        hue = (hue_fraction * 0.6) + 0.2  # This range avoids red and blue
-        # Set saturation and value for more muted, calm colors
-        saturation = 0.5
-        value = 0.7
+        base_hue = (hue_fraction * 0.6) + 0.2  # Avoids red and blue
+        hue_variance = 0.05
+        hue = base_hue + random.uniform(-hue_variance, hue_variance)
+        hue = max(0.0, min(hue, 1.0))  # Ensure hue stays within [0, 1]
+        saturation = random.uniform(0.4, 0.6)  # Adjust these ranges as needed
+        value = random.uniform(0.6, 0.8)
         return self.hsv_to_rgb(hue, saturation, value)
 
     def draw_map(self, screen, offset_x = 0):
@@ -47,20 +49,23 @@ class MapVisualizer:
                 room_color = self.get_color_intensity(base_room_color, room.lit)
                 if room_pos == (self.player.x, self.player.y):
                     pygame.draw.rect(screen, (255, 0, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2)
-                    room_color = (0, 0, 255)  # Blue color for player's room
+                    room_color = (0, 0, 255)  # Player's room
                 elif room_pos in enemy_positions:
-                    # Apply gradient effect for enemy rooms based on light level
-                    base_enemy_color = (255, 0, 0)  # Red color for enemy rooms
+                    base_enemy_color = (255, 0, 0)  # Enemy's room
                     room_color = self.get_color_intensity(base_enemy_color, room.lit)
                 self.draw_connectionless_edges(screen, room, x, y)
             else:
-                room_color = (0, 0, 0)  # Default color for unexplored/hidden rooms
+                room_color = (0, 0, 0)
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))
-            # Draw connections if the connected room is explored
             for direction, connected_room in room.connections.items():
                 if connected_room and (connected_room.x, connected_room.y) in self.explored:
                     self.draw_connection(screen, x, y, direction)
-            
+            # Draw an asterisk in the room if it has decorations
+            if len(room.decorations) > 0 and room.lit > 0:
+                asterisk_font = pygame.font.Font(None, 12)  # Choose an appropriate font size
+                asterisk_surface = asterisk_font.render('*', True, (200, 200, 200))  # White asterisk
+                asterisk_rect = asterisk_surface.get_rect(center=(x + self.cell_size // 2, y + self.cell_size // 2))
+                screen.blit(asterisk_surface, asterisk_rect.topleft)
 
     def update_light_levels(self, visibility_radius):
         for dx in range(-visibility_radius, visibility_radius + 1):
@@ -78,10 +83,8 @@ class MapVisualizer:
         elif direction == 's':  # South
             connection_rect = (x + self.cell_size / 3, y + self.cell_size, self.connection_size, self.connection_size)
         elif direction == 'w':  # West
-            # Align the right edge of the connection with the left edge of the cell
             connection_rect = (x - self.connection_size, y + self.cell_size / 3, self.connection_size, self.connection_size)
         elif direction == 'n':  # North
-            # Align the bottom edge of the connection with the top edge of the cell
             connection_rect = (x + self.cell_size / 3, y - self.connection_size, self.connection_size, self.connection_size)
         pygame.draw.rect(screen, (150, 150, 150), connection_rect)
     

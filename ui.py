@@ -1,5 +1,6 @@
 import pygame
-import random
+from message_display import MessageDisplay
+from room_display import RoomDisplay
 
 class UI:
     def __init__(self, screen, player, window_width, window_height, game_manager):
@@ -11,73 +12,38 @@ class UI:
         self.middle_button_label = None
         self.middle_button_rect = None
         self.player = player
+        self.inventory_item_rects = []
         self.window_width = window_width
         self.window_height = window_height
         self.custom_font = pygame.font.Font('customfont.ttf', 21)
         self.last_room_id = None
         self.to_render = []
         self.game_manager = game_manager
+        self.room_display = RoomDisplay(screen, player, self.custom_font, (window_width, window_height))
+        message_display_height = 300  # Adjust as needed
+        print(f"message display at x {0} y {self.window_height // 2 - message_display_height} width {self.window_width // 2} height {message_display_height}")
+        self.message_display = MessageDisplay(
+            x=0, 
+            y=2*self.window_height // 3 - message_display_height, 
+            width=self.window_width // 2, 
+            height=message_display_height,
+            font=self.custom_font
+        )
 
-    def wrap_text(self, text, max_width):
-        words = text.split(' ')
-        lines = []
-        current_line = ''
-        
-        for word in words:
-            # Check if adding the word exceeds the max width
-            if self.custom_font.size(current_line + word)[0] <= max_width:
-                current_line += word + ' '
-            else:
-                lines.append(current_line)
-                current_line = word + ' '
-        lines.append(current_line)
-        return lines
-
-    def display_room_info(self):
-        current_room_id = (self.player.current_room.x, self.player.current_room.y)
-        if current_room_id != self.last_room_id:
-            self.update_room_info_text()
-            self.last_room_id = current_room_id
-        room_info_surface = pygame.Surface((self.window_width // 2, self.window_height))
-        room_info_surface.fill((0, 0, 0))
-        padding = 10  # Padding inside the container
-        container_width = self.window_width // 2 - 2 * padding
-        division_y = self.window_height * 3 // 4  # Division point
-        pygame.draw.line(room_info_surface, (144, 238, 144), (0, division_y), (self.window_width // 2, division_y), 1)
-        self.render_room_text(room_info_surface, container_width, padding, division_y)
-        self.render_middle_button_and_inventory_frame(room_info_surface, division_y, padding)
+    def update_ui(self):
+        lower_ui_surface = pygame.Surface((self.window_width // 2, self.window_height // 4))
+        lower_ui_surface.fill((0, 0, 0))
+        padding = 10
+        self.render_middle_button_and_inventory_frame(lower_ui_surface, padding)
+        self.render_direction_buttons(lower_ui_surface, padding)
+        # Draw the border around the lower_ui_surface
         border_color = (144, 238, 144)
-        self.render_direction_buttons(room_info_surface, division_y, padding)
-        pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), 1)
-        self.screen.blit(room_info_surface, (0, 0))
+        pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
+        self.screen.blit(lower_ui_surface, (0, self.window_height * 3 // 4))
+        self.render_player_stats()
+        self.message_display.render(self.screen)
 
-    def update_room_info_text(self):
-        being = ['find yourself in ', 'are in ', 'have reached ', 'have arrived at ', 'are standing in ']
-        room_name = self.player.current_room.name.lower() if self.player.current_room.name else "unknown place"
-        region_name = self.player.current_room.region.replace('_', ' ') if self.player.current_room.region else "unknown region"
-        region_name = region_name.lower()
-        items = self.player.current_room.decorations
-        region_desc = f"You {random.choice(being)}{self.article_for_word(room_name)}{room_name} in {self.article_for_word(region_name)}{region_name}."
-        if items:
-            items_desc = "You see "
-            if len(items) == 1:
-                # Handle single item
-                items_desc += self.article_for_word(items[0]) + items[0] + "."
-            else:
-                # Handle multiple items
-                items_desc += ", ".join([self.article_for_word(item) + item for item in items[:-1]])
-                items_desc += " and " + self.article_for_word(items[-1]) + items[-1] + "."
-        else:
-            items_desc = "You see nothing of interest."
-        self.to_render = [region_desc, items_desc]
-
-    def article_for_word(self, word):
-        if word[0].lower() in 'aeiou':
-            return "an "
-        else:
-            return "a "
-
-    def display_player_stats(self):
+    def render_player_stats(self):
         custom_font = pygame.font.Font('customfont.ttf', 20)
         stats_surface = pygame.Surface((self.window_height - 160, 160))
         stats_surface.fill((50, 50, 50))
@@ -118,64 +84,48 @@ class UI:
         half_window_width = self.window_width // 2
         self.screen.blit(stats_surface, (half_window_width, self.window_height - 160))
 
-    def render_room_text(self, surface, container_width, padding, division_y):
-        start_y = padding
-        for line in self.to_render:
-            wrapped_lines = self.wrap_text(line, container_width)
-            for wrapped_line in wrapped_lines:
-                text_surface = self.custom_font.render(wrapped_line, True, (255, 255, 255))
-                center_x = padding + (container_width - text_surface.get_width()) // 2
-                surface.blit(text_surface, (center_x, start_y))
-                start_y += self.custom_font.size(wrapped_line)[1]
-                if start_y > division_y - padding: break
-
-    def render_middle_button_and_inventory_frame(self, surface, division_y, padding):
+    def render_middle_button_and_inventory_frame(self, surface, padding):
         section_width = (surface.get_width() - 2 * padding) // 3
-        line_color = (255, 255, 255)
-        pygame.draw.line(surface, line_color, (section_width, division_y), (section_width, surface.get_height()), 1)
-        pygame.draw.line(surface, line_color, (2 * section_width, division_y), (2 * section_width, surface.get_height()), 1)
+        # Relative division_y for lower_ui_surface
+        relative_division_y = 0  # Top of the lower_ui_surface
         frame_x = padding
         frame_width = section_width - 2 * padding
-        frame_height = surface.get_height() - division_y - 2 * padding
+        frame_height = surface.get_height() - 2 * padding
         inventory_label = "Inventory"
-        
-        # Render the inventory label
         label_surface = self.custom_font.render(inventory_label, True, (255, 255, 255))
-        surface.blit(label_surface, (frame_x + (frame_width - label_surface.get_width()) // 2, division_y + padding))
-
-        # Draw the inventory frame
-        frame_rect = pygame.Rect(frame_x, division_y + label_surface.get_height() + padding, frame_width, frame_height - label_surface.get_height())
+        surface.blit(label_surface, (frame_x + (frame_width - label_surface.get_width()) // 2, relative_division_y + padding))
+        frame_rect = pygame.Rect(frame_x, relative_division_y + label_surface.get_height() + padding, frame_width, frame_height - label_surface.get_height())
         pygame.draw.rect(surface, (200, 200, 200), frame_rect, 1)
-
-        # Render the inventory items
-        item_start_y = division_y + label_surface.get_height() + 2 * padding
-        item_spacing = 20  # Adjust as needed
-        for i, item in enumerate(self.player.inventory):
-            item_text = f"{i + 1}. {item}"  # Numbering the items
+        item_start_y = relative_division_y + label_surface.get_height() + 2 * padding
+        item_spacing = 20
+        self.inventory_item_rects.clear()  # Clear previous rectangles
+        # item in inventory collision rects
+        for i, item in enumerate(self.player.inventory.items):
+            item_text = f"- {item}"
             item_surface = self.custom_font.render(item_text, True, (255, 255, 255))
-            surface.blit(item_surface, (frame_x + padding, item_start_y + i * item_spacing))
+            item_rect = item_surface.get_rect(topleft=(frame_x + padding, item_start_y + i * item_spacing))
+            self.inventory_item_rects.append((item, item_rect))
+            surface.blit(item_surface, item_rect.topleft)
         button_width, button_height = 120, 40
         button_x = section_width + (section_width - button_width) // 2
-        button_y = division_y + (frame_height - button_height) // 2
+        button_y = (frame_height - button_height) // 2  # Centering the button vertically in the frame
         self.middle_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        # Set the button label text
         self.set_middle_button_text()
-        # Render the text for the button label
         button_label_surface = self.custom_font.render(self.middle_button_label, True, (0, 0, 0))
-        # Calculate the position to center the text on the button
         label_x = self.middle_button_rect.x + (self.middle_button_rect.width - button_label_surface.get_width()) // 2
         label_y = self.middle_button_rect.y + (self.middle_button_rect.height - button_label_surface.get_height()) // 2
         pygame.draw.rect(surface, (200, 200, 200), self.middle_button_rect)
         surface.blit(button_label_surface, (label_x, label_y))
 
-    def render_direction_buttons(self, surface, division_y, padding):
+    def render_direction_buttons(self, surface, padding):
         right_section_start = 2 * ((surface.get_width() - 2 * padding) // 3)
         section_width = (surface.get_width() - 2 * padding) // 3
         button_size = section_width // 5
         button_adjust = 5
         adjusted_button_size = button_size - 2 * button_adjust
+        relative_division_y = 0
         center_x = right_section_start + section_width // 2
-        center_y = division_y + (surface.get_height() - division_y) // 2
+        center_y = relative_division_y + (surface.get_height() - relative_division_y) // 2
         self.n_button_rect = pygame.Rect(center_x - adjusted_button_size // 2, center_y - button_size - adjusted_button_size // 2, adjusted_button_size, adjusted_button_size)
         self.s_button_rect = pygame.Rect(center_x - adjusted_button_size // 2, center_y + button_size // 2, adjusted_button_size, adjusted_button_size)
         self.w_button_rect = pygame.Rect(center_x - button_size - adjusted_button_size // 2, center_y - adjusted_button_size // 2, adjusted_button_size, adjusted_button_size)
@@ -190,41 +140,67 @@ class UI:
     def process_input(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 4:  # Mouse wheel up
+                    self.message_display.handle_scroll(-1)  # Scroll up
+                elif event.button == 5:  # Mouse wheel down
+                    self.message_display.handle_scroll(1)   # Scroll down
                 mouse_pos = pygame.mouse.get_pos()
                 self.check_button_click(mouse_pos)
+                self.check_inventory_click(mouse_pos)
 
     def check_button_click(self, mouse_pos):
-        # Check if any direction button was clicked
+        translated_mouse_pos = (mouse_pos[0], mouse_pos[1] - self.window_height * 3 // 4)
         direction = None
-        if self.n_button_rect and self.n_button_rect.collidepoint(mouse_pos):
+        if self.n_button_rect and self.n_button_rect.collidepoint(translated_mouse_pos):
             direction = 'n'
-        elif self.s_button_rect and self.s_button_rect.collidepoint(mouse_pos):
+        elif self.s_button_rect and self.s_button_rect.collidepoint(translated_mouse_pos):
             direction = 's'
-        elif self.w_button_rect and self.w_button_rect.collidepoint(mouse_pos):
+        elif self.w_button_rect and self.w_button_rect.collidepoint(translated_mouse_pos):
             direction = 'w'
-        elif self.e_button_rect and self.e_button_rect.collidepoint(mouse_pos):
+        elif self.e_button_rect and self.e_button_rect.collidepoint(translated_mouse_pos):
             direction = 'e'
         if direction:
             self.game_manager.move_player(direction)
             self.game_manager.move_enemies()
-        # Check for middle button click
-        if self.middle_button_rect and self.middle_button_rect.collidepoint(mouse_pos):
+        if self.middle_button_rect and self.middle_button_rect.collidepoint(translated_mouse_pos):
             self.handle_middle_button_click()
 
+    def check_inventory_click(self, mouse_pos):
+        # If there is an offset, adjust mouse_pos accordingly
+        offset_y = self.window_height * 3 // 4
+        adjusted_mouse_pos = (mouse_pos[0], mouse_pos[1] - offset_y)
+
+        for item, rect in self.inventory_item_rects:
+            if rect.collidepoint(adjusted_mouse_pos):
+                self.player.inventory.remove_item(item)
+                self.player.current_room.decorations.append(item)
+                self.message_display.add_message(f"You dropped the {item} on the ground.")
+                self.room_display.player_inventory_change = True
+                self.room_display.display_room_info()
+                break
+
     def set_middle_button_text(self):
-        if self.player.current_room.decorations:
-            self.middle_button_label = "Pick Up"
-        else:
-            self.middle_button_label = ""
+        special_items = {"amulet", "statue", "scroll", "gemstone", "relic", "backpack", "wood", "gold", "lantern", "flint"}
+        self.middle_button_label = ""
+        for item in self.player.current_room.decorations:
+            if item in special_items:
+                self.middle_button_label = "Pick Up"
+                break
 
     def handle_middle_button_click(self):
         if self.middle_button_label == "Pick Up":
-            item = self.player.current_room.decorations[0]
-            self.player.inventory.append(item)
-            self.player.current_room.decorations.remove(item)
-            self.last_room_id = None
-            self.display_room_info()
-            
-
-
-
+            special_items = {"amulet", "statue", "scroll", "gemstone", "relic", "backpack", "wood", "gold", "lantern", "flint"}
+            for item in self.player.current_room.decorations:
+                if item in special_items:
+                    if self.player.inventory.add_item(item):
+                        self.player.current_room.decorations.remove(item)
+                        self.room_display.player_inventory_change = True
+                        self.message_display.add_message(f"You picked up the {item}.")
+                        self.room_display.display_room_info()
+                        break
+                    else:
+                        self.message_display.add_message(f"Unable to pick up {item}. Your inventory is full.")
+                        break
+        else:
+            if len(self.player.current_room.decorations) > 0:
+                self.message_display.add_message(f"Sorry, you cannot have the {self.player.current_room.decorations[0]}.")

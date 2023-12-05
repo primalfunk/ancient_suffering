@@ -1,9 +1,7 @@
 TODOS
-
-- differentiate what items can and can't be picked up
-- implement text feedback to the screen when an item is picked up which lasts for a second then goes away
 - add in weapons and armor
 - add interaction with enemies, combat
 - add experience and level system
 - add merchant and trainer NPCs
-- start planning the game loop
+- work out dimensionality of the room display
+- start planning the game loop; is map solution taking out all the enemies?

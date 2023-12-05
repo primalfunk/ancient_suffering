@@ -27,16 +27,24 @@ class GameManager:
         pygame.display.set_caption("Journey to a Finished Game")
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
 
+
     def move_player(self, direction):
         if direction and self.player.can_move(direction, self.game_map):
+            cardinals = {"n": "north",
+                         "s": "south",
+                         "w": "west",
+                         "e": "east"}
+            cardinal_direction = cardinals[direction]
             self.player_move_count += 1
             new_room = self.game_map.rooms[(self.player.x, self.player.y)].connections[direction]
             self.player.move_to_room(new_room)
             self.map_visualizer.explored.add((new_room.x, new_room.y))
             self.map_visualizer.update_light_levels(visibility_radius=3)
+            new_region_name = new_room.region.replace('_', ' ')
+            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_region_name.lower()}, x,y: [{new_room.x}, {new_room.y}])")
             # call the method here to change the text of the ui.middle_button
         else:
-            print("You can't go that way.")
+            self.ui.message_display.add_message(f"You can't go that way.")
 
     def run_game_loop(self):
         running = True
@@ -55,16 +63,22 @@ class GameManager:
                         direction = 'w'
                     elif event.key == pygame.K_RIGHT:
                         direction = 'e'
+                    elif event.key == pygame.K_SPACE:
+                        # check the middle button text
+                        if self.ui.middle_button_label == "Pick Up":
+                            self.ui.handle_middle_button_click()
+                    elif event.key == pygame.K_q:
+                        running = False
                     if direction:
                         self.move_player(direction)
                         self.move_enemies()
             self.ui.process_input(events) # pass processing of the events to the UI to handle mouse things
             # Rest of the game loop
             self.screen.fill((0, 0, 0))
-            self.ui.display_room_info()
+            self.ui.room_display.display_room_info()
+            self.ui.update_ui()
             half_window_width = self.window_width // 2
             self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
-            self.ui.display_player_stats()
             pygame.display.flip()
 
     def spawn_enemies(self, count):
