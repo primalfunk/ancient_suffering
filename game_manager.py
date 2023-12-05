@@ -13,6 +13,7 @@ class GameManager:
         self.player = Player(start_room)
         self.player_move_count = 0
         self.enemies = []
+        self.staggered_enemies = False
         self.spawn_enemies(10)
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
         cell_size = 25
@@ -33,6 +34,7 @@ class GameManager:
             self.player.move_to_room(new_room)
             self.map_visualizer.explored.add((new_room.x, new_room.y))
             self.map_visualizer.update_light_levels(visibility_radius=3)
+            # call the method here to change the text of the ui.middle_button
         else:
             print("You can't go that way.")
 
@@ -55,6 +57,7 @@ class GameManager:
                         direction = 'e'
                     if direction:
                         self.move_player(direction)
+                        self.move_enemies()
             self.ui.process_input(events) # pass processing of the events to the UI to handle mouse things
             # Rest of the game loop
             self.screen.fill((0, 0, 0))
@@ -80,19 +83,6 @@ class GameManager:
                 return False
         return True
     
-    def move_enemy(self, enemy):
-        if enemy.aggro:
-            # Chase player logic
-            direction = self.calculate_direction_towards_player(enemy, self.player)
-        else:
-            # Random movement logic
-            valid_directions = [dir for dir in ['n', 's', 'e', 'w'] if enemy.can_move(dir, self.game_map)]
-            direction = random.choice(valid_directions) if valid_directions else None
-
-        if direction:
-            new_room = self.game_map.rooms[(enemy.x, enemy.y)].connections[direction]
-            enemy.move_to_room(new_room)
-
     def update_enemies_aggro(self):
         player_x, player_y = self.player.x, self.player.y
         for enemy in self.enemies:
@@ -121,7 +111,25 @@ class GameManager:
         }.get(direction, (0, 0))
     
     def move_enemies(self):
+        if self.staggered_enemies == False:
+            self.staggered_enemies == True
+            for enemy in self.enemies:
+                if random.random() < 0.13:
+                    self.move_enemy(enemy)
         for enemy in self.enemies:
             if self.player_move_count % enemy.speed == 0:
                 if random.random() < 0.87:  # 87% chance to move
                     self.move_enemy(enemy)
+
+    def move_enemy(self, enemy):
+        if enemy.aggro:
+            # Chase player logic
+            direction = self.calculate_direction_towards_player(enemy, self.player)
+        else:
+            # Random movement logic
+            valid_directions = [dir for dir in ['n', 's', 'e', 'w'] if enemy.can_move(dir, self.game_map)]
+            direction = random.choice(valid_directions) if valid_directions else None
+
+        if direction:
+            new_room = self.game_map.rooms[(enemy.x, enemy.y)].connections[direction]
+            enemy.move_to_room(new_room)
