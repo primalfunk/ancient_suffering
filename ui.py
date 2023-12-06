@@ -1,3 +1,4 @@
+import json
 import pygame
 from message_display import MessageDisplay
 from room_display import RoomDisplay
@@ -21,7 +22,6 @@ class UI:
         self.game_manager = game_manager
         self.room_display = RoomDisplay(screen, player, self.custom_font, (window_width, window_height))
         message_display_height = 300  # Adjust as needed
-        print(f"message display at x {0} y {self.window_height // 2 - message_display_height} width {self.window_width // 2} height {message_display_height}")
         self.message_display = MessageDisplay(
             x=0, 
             y=2*self.window_height // 3 - message_display_height, 
@@ -29,6 +29,23 @@ class UI:
             height=message_display_height,
             font=self.custom_font
         )
+        self.item_category_map = self.parse_item_categories()
+
+    def parse_item_categories(self):
+        category_map = {}
+        with open('words.json', 'r') as file:
+            data = json.load(file)
+            for category, items in data["objects"].items():
+                for item in items:
+                    if category == "tools":
+                        category_map[item] = 'T'
+                    elif category == "weapons":
+                        category_map[item] = 'W'
+                    elif category == "armor":
+                        category_map[item] = 'A'
+                    elif category == "artifacts":
+                        category_map[item] = 'K'
+        return category_map
 
     def update_ui(self):
         lower_ui_surface = pygame.Surface((self.window_width // 2, self.window_height // 4))
@@ -48,7 +65,7 @@ class UI:
         stats_surface = pygame.Surface((self.window_height - 160, 160))
         stats_surface.fill((50, 50, 50))
         first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
-        second_column_attributes = ['str', 'dex', 'int', 'wis', 'con', 'cha']
+        second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'cha']
         third_column_attributes = ['x', 'y']
         quarter_width = (self.window_width // 2) // 4
         first_column_offset = quarter_width - (quarter_width // 2)
@@ -58,10 +75,13 @@ class UI:
         first_column_color = (135, 206, 235)  # soft blue
         second_column_color = (152, 251, 152)  # pale green
         third_column_color = (230, 230, 250)  # lavender
-        fourth_area_color = (255, 253, 208) # cream
+        fourth_area_color = (255, 253, 208)  # cream
+        
+        # Drawing column borders
         def draw_column_border(x_offset, color):
             border_rect = pygame.Rect(x_offset - quarter_width // 2, 0, quarter_width, 160)
             pygame.draw.rect(stats_surface, color, border_rect, 2)
+        
         draw_column_border(first_column_offset, first_column_color)
         draw_column_border(second_column_offset, second_column_color)
         draw_column_border(third_column_offset, third_column_color)
@@ -69,24 +89,34 @@ class UI:
         for i, attr in enumerate(first_column_attributes):
             text = f"{attr.title()}: {getattr(self.player, attr)}"
             text_surface = custom_font.render(text, True, first_column_color)
-            text_x = first_column_offset - (text_surface.get_width() // 2)
-            stats_surface.blit(text_surface, (text_x, 20 * i))
+            stats_surface.blit(text_surface, (first_column_offset - (text_surface.get_width() // 2), 20 * i))
         for i, attr in enumerate(second_column_attributes):
             text = f"{attr.upper()}: {getattr(self.player, attr)}"
             text_surface = custom_font.render(text, True, second_column_color)
-            text_x = second_column_offset - (text_surface.get_width() // 2)
-            stats_surface.blit(text_surface, (text_x, 20 * i))
+            stats_surface.blit(text_surface, (second_column_offset - (text_surface.get_width() // 2), 20 * i))
         for i, attr in enumerate(third_column_attributes):
             text = f"Lat: {getattr(self.player, 'x')}" if attr == 'x' else f"Lon: {getattr(self.player, 'y')}"
             text_surface = custom_font.render(text, True, third_column_color)
-            text_x = third_column_offset - (text_surface.get_width() // 2)
-            stats_surface.blit(text_surface, (text_x, 20 * i))
+            stats_surface.blit(text_surface, (third_column_offset - (text_surface.get_width() // 2), 20 * i))
+        y_offset = 20  # Starting Y offset for the equipment title
+        equipment_title = "Equipment"
+        title_surface = custom_font.render(equipment_title, True, fourth_area_color)
+        stats_surface.blit(title_surface, (fourth_column_offset - (title_surface.get_width() // 2), y_offset))
+        y_offset += 20
+        if self.player.equipped_weapon:
+            weapon_text = f"{self.player.equipped_weapon}"
+            weapon_surface = custom_font.render(weapon_text, True, fourth_area_color)
+            stats_surface.blit(weapon_surface, (fourth_column_offset - (weapon_surface.get_width() // 2), y_offset))
+            y_offset += 20
+        if self.player.equipped_armor:
+            armor_text = f"{self.player.equipped_armor}"
+            armor_surface = custom_font.render(armor_text, True, fourth_area_color)
+            stats_surface.blit(armor_surface, (fourth_column_offset - (armor_surface.get_width() // 2), y_offset))
         half_window_width = self.window_width // 2
         self.screen.blit(stats_surface, (half_window_width, self.window_height - 160))
 
     def render_middle_button_and_inventory_frame(self, surface, padding):
         section_width = (surface.get_width() - 2 * padding) // 3
-        # Relative division_y for lower_ui_surface
         relative_division_y = 0  # Top of the lower_ui_surface
         frame_x = padding
         frame_width = section_width - 2 * padding
@@ -99,7 +129,6 @@ class UI:
         item_start_y = relative_division_y + label_surface.get_height() + 2 * padding
         item_spacing = 20
         self.inventory_item_rects.clear()  # Clear previous rectangles
-        # item in inventory collision rects
         for i, item in enumerate(self.player.inventory.items):
             item_text = f"- {item}"
             item_surface = self.custom_font.render(item_text, True, (255, 255, 255))
@@ -180,27 +209,43 @@ class UI:
                 break
 
     def set_middle_button_text(self):
-        special_items = {"amulet", "statue", "scroll", "gemstone", "relic", "backpack", "wood", "gold", "lantern", "flint"}
         self.middle_button_label = ""
         for item in self.player.current_room.decorations:
-            if item in special_items:
+            if self.item_category_map.get(item, '') in {'T', 'W', 'A', 'K'}:
                 self.middle_button_label = "Pick Up"
                 break
 
     def handle_middle_button_click(self):
         if self.middle_button_label == "Pick Up":
-            special_items = {"amulet", "statue", "scroll", "gemstone", "relic", "backpack", "wood", "gold", "lantern", "flint"}
             for item in self.player.current_room.decorations:
-                if item in special_items:
+                item_category = self.item_category_map.get(item, '')
+                if item_category in {'T', 'K'}:
                     if self.player.inventory.add_item(item):
                         self.player.current_room.decorations.remove(item)
                         self.room_display.player_inventory_change = True
                         self.message_display.add_message(f"You picked up the {item}.")
-                        self.room_display.display_room_info()
-                        break
                     else:
                         self.message_display.add_message(f"Unable to pick up {item}. Your inventory is full.")
-                        break
-        else:
-            if len(self.player.current_room.decorations) > 0:
-                self.message_display.add_message(f"Sorry, you cannot have the {self.player.current_room.decorations[0]}.")
+                
+                if item_category in {'W'} and self.player.equipped_weapon is None:
+                    self.player.equip_item(item, item_category)
+                    self.message_display.add_message(f"You equipped the {item}.")
+                
+                elif item_category in {'A'} and self.player.equipped_armor is None:
+                    self.player.equip_item(item, item_category)
+                    self.message_display.add_message(f"You equipped the {item}.")
+                
+                elif item_category in {'W'} and self.player.equipped_weapon is not None:
+                    self.message_display.add_message(f"You dropped the {self.player.equipped_weapon}.")
+                    self.player.unequip_item(self.player.equipped_weapon, item_category)
+                    self.player.equip_item(item, item_category)
+                    self.message_display.add_message(f"You equipped the {item}.")
+
+                elif item_category in {'A'} and self.player.equipped_armor is not None:
+                    self.message_display.add_message(f"You dropped the {self.player.equipped_armor}.")
+                    self.player.unequip_item(self.player.equipped_armor, item_category)
+                    self.message_display.add_message(f"You equipped the {item}.")
+                    self.player.equip_item(item, item_category)
+                self.room_display.display_room_info()
+
+                break

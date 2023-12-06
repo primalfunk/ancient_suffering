@@ -1,7 +1,7 @@
 import json
 from region_assignment import RegionAssignment
 from room_decoration import RoomDecoration
-from tool_distribution import ToolDistribution
+from object_distribution import ObjectDistribution
 
 class MapElaborator:
     def __init__(self, map_instance, words_file):
@@ -14,5 +14,5 @@ class MapElaborator:
         self.room_decoration = RoomDecoration(self.map, data)
         self.room_decoration.decorate_rooms()
 
-        self.tool_distribution = ToolDistribution(self.map, data['objects']['tools'])
-        self.tool_distribution.distribute_tools()
+        self.object_distribution = ObjectDistribution(self.map)
+        self.object_distribution.distribute_items()

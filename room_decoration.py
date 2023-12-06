@@ -10,7 +10,7 @@ class RoomDecoration:
 
     def decorate_rooms(self):
         for pos, room in self.map.rooms.items():
-            if random.random() < 0.33:
+            if random.random() < 0.2:
                 room_type = self.determine_room_type(room.region)
                 room.decorations = self.select_decorations_for_room(room_type)
 
@@ -25,7 +25,7 @@ class RoomDecoration:
             return 'any'
 
     def select_decorations_for_room(self, room_type):
-        if random.random() < 0.75:
+        if random.random() < 0.25:
             decoration = self.get_group_specific_item(room_type)
         else:
             decoration = self.get_random_item('daily_life_items')

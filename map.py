@@ -3,7 +3,6 @@ from map_elaborator import MapElaborator
 import random
 from room import Room
 
-
 class Map:
     def __init__(self, size):
         self.size = size
