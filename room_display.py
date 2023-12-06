@@ -61,7 +61,14 @@ class RoomDisplay:
                 items_desc += " and " + self.article_for_word(items[-1]) + items[-1] + "."
         else:
             items_desc = "You see nothing of interest."
-        self.to_render = [region_desc, items_desc]
+        enemy_desc = ""
+        enemies = self.player.current_room.enemies
+        if len(enemies) > 1:
+            enemy_desc = f"There are {len(enemies)} enemies in this room."
+        elif len(enemies) == 1:
+            enemy = enemies[0]
+            enemy_desc = f"There is "+ self.article_for_word(enemy.name) + enemy.name + " here."
+        self.to_render = [region_desc, items_desc, enemy_desc]
 
     def render_room_text(self, surface, container_width, padding, division_y):
         start_y = padding

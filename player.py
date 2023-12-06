@@ -5,8 +5,8 @@ class Player:
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
         self.name = "PLAYER"
-        self.atk = 0 # attack
-        self.defn = 0 # defense
+        self.atk = 10 # attack
+        self.defn = 10 # defense
         self.int = 0 # intelligence
         self.wis = 0 # wisdom
         self.con = 0 # constitution

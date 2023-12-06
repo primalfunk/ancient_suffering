@@ -1,9 +1,10 @@
+from combat import Combat
 import json
 import pygame
 from message_display import MessageDisplay
 from room_display import RoomDisplay
 
-class UI:
+class UI: 
     def __init__(self, screen, player, window_width, window_height, game_manager):
         self.screen = screen
         self.n_button_rect = None
@@ -214,8 +215,15 @@ class UI:
             if self.item_category_map.get(item, '') in {'T', 'W', 'A', 'K'}:
                 self.middle_button_label = "Pick Up"
                 break
+        for enemy in self.game_manager.enemies_manager.enemies:
+            if enemy.current_room == self.player.current_room:
+                self.middle_button_label = "Attack"
+                break
 
     def handle_middle_button_click(self):
+        if self.middle_button_label == "Attack":
+            self.game_manager.combat = Combat(self.player)
+        
         if self.middle_button_label == "Pick Up":
             for item in self.player.current_room.decorations:
                 item_category = self.item_category_map.get(item, '')

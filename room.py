@@ -9,6 +9,12 @@ class Room:
         self.lit = 0
         self.has_treasure = False
         self.decorations = []
+        self.enemies = []
+        # for a-star pathfinding
+        self.parent = None
+        self.g = 0
+        self.h = 0
+        self.f = 0
 
     def connect(self, direction, room):
         opposites = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}

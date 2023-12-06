@@ -38,7 +38,7 @@ class MapVisualizer:
     def draw_map(self, screen, offset_x = 0):
         visibility_radius = 3 # default 3, + 2 with torch
         self.update_light_levels(visibility_radius)
-        enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemies}
+        enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemies_manager.enemies}
         for room in self.game_map.rooms.values():
             x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
             y = room.y * (self.cell_size + self.connection_size) + self.padding
@@ -63,7 +63,8 @@ class MapVisualizer:
             # Draw an asterisk in the room if it has decorations
             if len(room.decorations) > 0 and room.lit > 0:
                 asterisk_font = pygame.font.Font(None, 12)  # Choose an appropriate font size
-                asterisk_surface = asterisk_font.render('*', True, (200, 200, 200))  # White asterisk
+                symbol = "*"
+                asterisk_surface = asterisk_font.render(symbol, True, (200, 200, 200))  # White asterisk
                 asterisk_rect = asterisk_surface.get_rect(center=(x + self.cell_size // 2, y + self.cell_size // 2))
                 screen.blit(asterisk_surface, asterisk_rect.topleft)
 

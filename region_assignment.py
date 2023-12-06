@@ -1,6 +1,13 @@
 from collections import deque
+# import json
+import logging
+# from map import Map
 import math
 import random
+
+# Configure logging
+logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RegionAssignment:
     def __init__(self, map_instance, location_data):
@@ -10,15 +17,22 @@ class RegionAssignment:
         self.adjust_region_borders()
 
     def assign_regions(self):
+        logging.info("Assigning regions...")
         unassigned_rooms = set(self.map.rooms.keys())
         shuffled_regions = list(self.locations.items())
         random.shuffle(shuffled_regions)
 
         for region, data in shuffled_regions:
+            if data['total_zones'] > len(unassigned_rooms):
+                logging.warning(f"Total zones for region {region} exceed unassigned rooms. Limiting to available rooms.")
+                data['total_zones'] = len(unassigned_rooms)
+
             while unassigned_rooms and data['total_zones'] > 0:
                 start_pos = random.choice(list(unassigned_rooms))
                 grown_size = self.grow_region(start_pos, region, unassigned_rooms, data['total_zones'])
                 data['total_zones'] -= grown_size
+                logging.debug(f"Region {region} grown by {grown_size} rooms.")
+
 
     def grow_region(self, start_pos, region, unassigned_rooms, max_size):
         queue = deque([start_pos])
@@ -43,15 +57,21 @@ class RegionAssignment:
         unassigned_rooms.remove(pos)
 
     def adjust_region_borders(self):
-        # This method will adjust region borders to cover all rooms
+        logging.info("Adjusting region borders...")
         unassigned_rooms = {pos for pos, room in self.map.rooms.items() if room.region is None}
+        iteration_count = 0
 
         while unassigned_rooms:
             for pos in list(unassigned_rooms):
                 self.adjust_room_region(pos, unassigned_rooms)
+            iteration_count += 1
+
+            if iteration_count > len(self.map.rooms):
+                logging.warning("Infinite loop detected in adjust_region_borders. Breaking out of loop.")
+                break
 
     def adjust_room_region(self, pos, unassigned_rooms):
-        # Adjust region for a single room
+        logging.debug(f"Adjusting region for room at {pos}...")
         neighbors = self.get_adjacent_positions(pos)
         best_region = None
         max_neighbors = 0
@@ -69,6 +89,9 @@ class RegionAssignment:
             room.region = best_region
             room.name = random.choice(self.locations[best_region]['zone_names'])
             unassigned_rooms.remove(pos)
+        else:
+            logging.debug(f"No adjacent regions found for room at {pos}.")
+    
 
     def count_region_neighbors(self, pos, region):
         count = 0
@@ -111,3 +134,11 @@ class RegionAssignment:
         map_width = int(math.sqrt(total_rooms))
         map_height = math.ceil(total_rooms / map_width)
         return map_width, map_height
+
+
+# words_file = 'words.json'
+# with open(words_file, 'r') as file:
+#     data = json.load(file)
+# map = Map(25)
+# region_assignment = RegionAssignment(map, data['locations'])
+# print("assigned regions successfully")

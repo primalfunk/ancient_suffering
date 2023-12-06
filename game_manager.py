@@ -1,21 +1,36 @@
-from enemy import Enemy
+from combat import Combat
+from enemy_manager import EnemyManager
+import logging
+from map import Map
+from map_visualizer import MapVisualizer
 from player import Player
 import pygame
 import random
-from map_visualizer import MapVisualizer
 from ui import UI
 
+# Configure logging
+logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    
 class GameManager:
     def __init__(self, game_map):
+        logging.debug("Initializing GameManager...")
         pygame.init()
         self.game_map = game_map
-        start_room = random.choice(list(game_map.rooms.values()))
+        logging.debug("Map initialized.")
+
+        start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
+        logging.debug("Player initialized.")
+
         self.player_move_count = 0
-        self.enemies = []
+        self.enemies_manager = EnemyManager(game_map, self.player, self.player_move_count)
+        logging.debug("EnemyManager initialized.")
+
+        self.combat = None
         self.staggered_enemies = False
-        self.spawn_enemies(10)
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
+        logging.debug("MapVisualizer initialized.")
         cell_size = 25
         connection_size = cell_size // 3
         padding = 2
@@ -26,7 +41,6 @@ class GameManager:
         self.screen = pygame.display.set_mode([self.window_width, self.window_height])
         pygame.display.set_caption("Journey to a Finished Game")
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
-
 
     def move_player(self, direction):
         if direction and self.player.can_move(direction, self.game_map):
@@ -43,6 +57,7 @@ class GameManager:
             new_region_name = new_room.region.replace('_', ' ')
             self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_region_name.lower()}, x,y: [{new_room.x}, {new_room.y}])")
             # call the method here to change the text of the ui.middle_button
+
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
 
@@ -54,25 +69,12 @@ class GameManager:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    direction = None
-                    if event.key == pygame.K_UP:
-                        direction = 'n'
-                    elif event.key == pygame.K_DOWN:
-                        direction = 's'
-                    elif event.key == pygame.K_LEFT:
-                        direction = 'w'
-                    elif event.key == pygame.K_RIGHT:
-                        direction = 'e'
-                    elif event.key == pygame.K_SPACE:
-                        # check the middle button text
-                        if self.ui.middle_button_label == "Pick Up":
-                            self.ui.handle_middle_button_click()
-                    elif event.key == pygame.K_q:
-                        running = False
-                    if direction:
-                        self.move_player(direction)
-                        self.move_enemies()
-            self.ui.process_input(events) # pass processing of the events to the UI to handle mouse things
+                    if event.key == pygame.K_r:
+                        # Restart the game
+                        self.restart_game()
+                    else:
+                        self.process_keypress(event)
+            self.ui.process_input(events)
             # Rest of the game loop
             self.screen.fill((0, 0, 0))
             self.ui.room_display.display_room_info()
@@ -80,41 +82,6 @@ class GameManager:
             half_window_width = self.window_width // 2
             self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
             pygame.display.flip()
-
-    def spawn_enemies(self, count):
-        for _ in range(count):  # Spawn count enemies
-            while True:
-                potential_start = random.choice(list(self.game_map.rooms.values()))
-                if self.is_valid_spawn(potential_start):
-                    enemy = Enemy(potential_start)
-                    self.enemies.append(enemy)
-                    break
-
-    def is_valid_spawn(self, start_room):
-        # Check distance from player and other enemies
-        for other in [self.player] + self.enemies:
-            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
-                return False
-        return True
-    
-    def update_enemies_aggro(self):
-        player_x, player_y = self.player.x, self.player.y
-        for enemy in self.enemies:
-            enemy.check_aggro(player_x, player_y)
-
-    def calculate_direction_towards_player(self, enemy, player):
-        best_direction = None
-        min_distance = float('inf')
-
-        for direction in ['n', 's', 'e', 'w']:
-            if enemy.can_move(direction, self.game_map):
-                dx, dy = self.direction_to_delta(direction)
-                new_x, new_y = enemy.x + dx, enemy.y + dy
-                distance = ((new_x - player.x) ** 2 + (new_y - player.y) ** 2) ** 0.5
-                if distance < min_distance:
-                    min_distance = distance
-                    best_direction = direction
-        return best_direction
 
     def direction_to_delta(self, direction):
         return {
@@ -124,26 +91,37 @@ class GameManager:
             'w': (-1, 0)
         }.get(direction, (0, 0))
     
-    def move_enemies(self):
-        if self.staggered_enemies == False:
-            self.staggered_enemies == True
-            for enemy in self.enemies:
-                if random.random() < 0.13:
-                    self.move_enemy(enemy)
-        for enemy in self.enemies:
-            if self.player_move_count % enemy.speed == 0:
-                if random.random() < 0.87:  # 87% chance to move
-                    self.move_enemy(enemy)
+    def restart_game(self):
+        # Reinitialize the Map, Player, EnemyManager, UI, etc.
+        logging.debug("Restarting game...")
+        logging.debug("Creating the Map...")
+        self.game_map = Map(25)  # Assuming 25 is the map size
+        start_room = random.choice(list(self.game_map.rooms.values()))
+        self.player = Player(start_room)
+        self.player_move_count = 0
+        self.enemies_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
+        self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
+        logging.debug("Game restarted successfully.")
 
-    def move_enemy(self, enemy):
-        if enemy.aggro:
-            # Chase player logic
-            direction = self.calculate_direction_towards_player(enemy, self.player)
-        else:
-            # Random movement logic
-            valid_directions = [dir for dir in ['n', 's', 'e', 'w'] if enemy.can_move(dir, self.game_map)]
-            direction = random.choice(valid_directions) if valid_directions else None
+    def process_keypress(self, event):
+        direction = None
+        if event.key == pygame.K_UP:
+            direction = 'n'
+        elif event.key == pygame.K_DOWN:
+            direction = 's'
+        elif event.key == pygame.K_LEFT:
+            direction = 'w'
+        elif event.key == pygame.K_RIGHT:
+            direction = 'e'
+        elif event.key == pygame.K_SPACE:
+            # check the middle button text
+            if self.ui.middle_button_label == "Pick Up":
+                self.ui.handle_middle_button_click()
+        elif event.key == pygame.K_q:
+            pygame.quit()
+            exit(0)  # Quit the game
 
         if direction:
-            new_room = self.game_map.rooms[(enemy.x, enemy.y)].connections[direction]
-            enemy.move_to_room(new_room)
+            self.move_player(direction)
+            self.enemies_manager.move_enemies()

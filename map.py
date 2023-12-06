@@ -1,7 +1,10 @@
 from collections import deque
+import logging
 from map_elaborator import MapElaborator
 import random
 from room import Room
+logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Map:
     def __init__(self, size):
@@ -9,6 +12,7 @@ class Map:
         self.rooms = {}
         self.connections = {}
         self.populate_grid()
+        logging.debug("Calling Map.generate_map")
         self.generate_map()
         MapElaborator(self, 'words.json')
 
