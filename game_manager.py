@@ -8,12 +8,9 @@ import pygame
 import random
 from ui import UI
 
-# Configure logging
-logging.basicConfig(filename='boot.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 class GameManager:
     def __init__(self, screen):
+        self.boot_logger = logging.getLogger('boot')
         self.game_map = Map(25) # instantiate the Map
         cell_size = 25
         connection_size = cell_size // 3
@@ -76,15 +73,15 @@ class GameManager:
     
     def restart_game(self):
         # Reinitialize the Map, Player, EnemyManager, UI, etc.
-        logging.debug("Restarting game...")
-        logging.debug("Creating the Map...")
+        self.boot_logger.debug("Restarting game...")
+        self.boot_logger.debug("Creating the Map...")
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
         self.player_move_count = 0
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
-        logging.debug("Game restarted successfully.")
+        self.boot_logger.debug("Game restarted successfully.")
 
     def process_keypress(self, event):
         direction = None

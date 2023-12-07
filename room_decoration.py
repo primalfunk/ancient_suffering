@@ -1,8 +1,10 @@
 import json
+import logging
 import random
 
 class RoomDecoration:
     def __init__(self, map_instance, decoration_data):
+        self.map_logger = logging.getLogger('map')
         self.map = map_instance
         self.decorations_data = decoration_data
         self.decorate_rooms()
@@ -61,17 +63,17 @@ class RoomDecoration:
                         decoration = room.decorations[0]
                         decoration_category = self.get_decoration_category(decoration)
                         decoration_letter = decoration_category[0].upper()
-                        print(decoration_letter, end='')
+                        self.map_logger.info(decoration_letter, end='')
                         decoration_summary[decoration_letter] += 1
                     else:
-                        print('x', end='')  # Room without decoration
+                        self.map_logger.info('x', end='')  # Room without decoration
                 else:
-                    print(' ', end='')  # No room
-            print()  # New line after each row
+                    self.map_logger.info(' ', end='')  # No room
+            self.map_logger.info()  # New line after each row
 
-        print("\nDecoration Summary:")
+        self.map_logger.info("\nDecoration Summary:")
         for category, count in decoration_summary.items():
-            print(f"{category}: {count}")
+            self.map_logger.info(f"{category}: {count}")
 
 
     def get_decoration_category(self, decoration):

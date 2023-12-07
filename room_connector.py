@@ -2,11 +2,10 @@ from collections import deque
 import logging
 import random
 from room import Room
-logging.basicConfig(filename='connections.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RoomConnector:
     def __init__(self, map):
+        self.connector_logger = logging.getLogger('connector')
         self.map = map
         self.connections = {}
         self.rooms = self.map.rooms
@@ -21,11 +20,11 @@ class RoomConnector:
             adjacent_pos = (room.x + dx, room.y + dy)
             return self.rooms.get(adjacent_pos)
         else:
-            logging.error(f"Expected Room object, got {type(room)} instead.")
+            self.connector_logger.error(f"Expected Room object, got {type(room)} instead.")
 
     def get_adjacent_rooms(self, room):
         if not isinstance(room, Room):
-            logging.error(f"get_adjacent_rooms: Expected Room, got {type(room)}")
+            self.connector_logger.error(f"get_adjacent_rooms: Expected Room, got {type(room)}")
             return []
         neighbors = {'n': None, 's': None, 'e': None, 'w': None}
         for direction, (dx, dy) in {'n': (0, -1), 's': (0, 1), 'e': (1, 0), 'w': (-1, 0)}.items():
@@ -65,7 +64,7 @@ class RoomConnector:
         direction = None
         opposite_direction = None
         if room1 == room2:
-            logging.error(f"Attempted to connect room {room1.room_id} to itself.")
+            self.connector_logger.error(f"Attempted to connect room {room1.room_id} to itself.")
             return
         if room1.x == room2.x:
             if room1.y < room2.y:
@@ -82,10 +81,10 @@ class RoomConnector:
             self.connections.setdefault(room2.room_id, {})[opposite_direction] = room1.room_id
             room1.connect(direction, room2)
             room2.connect(opposite_direction, room1)
-        logging.debug(f"Established connection between room {room1.room_id} and {room2.room_id}")
+        self.connector_logger.debug(f"Established connection between room {room1.room_id} and {room2.room_id}")
 
     def find_nearest_connected_room(self, unconnected_room):
-        logging.debug(f"Finding nearest connected room for unconnected room ID {unconnected_room.room_id}")
+        self.connector_logger.debug(f"Finding nearest connected room for unconnected room ID {unconnected_room.room_id}")
         queue = deque([unconnected_room])
         visited = set([unconnected_room])
         while queue:
@@ -94,11 +93,11 @@ class RoomConnector:
                 if neighbor in visited or neighbor is None:
                     continue
                 if neighbor in self.rooms.values():
-                    logging.debug(f"Nearest connected room for room ID {unconnected_room.room_id} is {neighbor.room_id}")
+                    self.connector_logger.debug(f"Nearest connected room for room ID {unconnected_room.room_id} is {neighbor.room_id}")
                     return neighbor
                 visited.add(neighbor)
                 queue.append(neighbor)
-        logging.warning(f"No connected room found for room ID {unconnected_room.room_id}")
+        self.connector_logger.warning(f"No connected room found for room ID {unconnected_room.room_id}")
         return None
 
     def ensure_connectivity(self):
@@ -134,7 +133,7 @@ class RoomConnector:
         for direction, next_room in room.connections.items():
             if next_room in self.rooms and next_room not in visited:
                 if not isinstance(next_room, Room):
-                    logging.error(f"dfs: next_room is not a Room object: {next_room}")
+                    self.connector_logger.error(f"dfs: next_room is not a Room object: {next_room}")
                     continue
                 self.dfs(next_room, visited)
 
@@ -149,7 +148,7 @@ class RoomConnector:
     def reduce_dead_ends(self):
         # Identify dead end rooms
         dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
-        print(f"Starting dead end count is {len(dead_end_rooms)}")
+        self.connector_logger.debug(f"Starting dead end count is {len(dead_end_rooms)}")
         target_count = len(dead_end_rooms) - 11 * 2 # exactly 11 dead-ends; one of each of the three tools (backpack, lantern, bedroll), three weapons, three armors, one random artifact, and one 'key' room we'll use later 
 
         for room in random.sample(dead_end_rooms, min(target_count, len(dead_end_rooms))):
@@ -161,4 +160,4 @@ class RoomConnector:
                 self.establish_connection(room, new_connection)
 
         dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
-        print(f"Ending dead end count is {len(dead_end_rooms)}")
+        self.connector_logger.debug(f"Ending dead end count is {len(dead_end_rooms)}")

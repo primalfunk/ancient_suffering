@@ -1,16 +1,11 @@
 from collections import deque
-# import json
 import logging
-# from map import Map
 import math
 import random
 
-# Configure logging
-logging.basicConfig(filename='map.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 class RegionAssignment:
     def __init__(self, map_instance, location_data):
+        self.map_logger = logging.getLogger('map')
         self.map = map_instance
         self.locations = location_data
         self.assign_regions()
@@ -23,7 +18,7 @@ class RegionAssignment:
 
         for region, data in shuffled_regions:
             if data['total_zones'] > len(unassigned_rooms):
-                logging.warning(f"Total zones for region {region} exceed unassigned rooms. Limiting to available rooms.")
+                self.map_logger.warning(f"Total zones for region {region} exceed unassigned rooms. Limiting to available rooms.")
                 data['total_zones'] = len(unassigned_rooms)
 
             while unassigned_rooms and data['total_zones'] > 0:
@@ -61,7 +56,7 @@ class RegionAssignment:
                 self.adjust_room_region(pos, unassigned_rooms)
             iteration_count += 1
             if iteration_count > len(self.map.rooms):
-                logging.warning("Infinite loop detected in adjust_region_borders. Breaking out of loop.")
+                self.map_logger.warning("Infinite loop detected in adjust_region_borders. Breaking out of loop.")
                 break
 
     def adjust_room_region(self, pos, unassigned_rooms):
@@ -109,23 +104,15 @@ class RegionAssignment:
                 room = map_instance.rooms.get((x, y))
                 if room:
                     if room.region:
-                        print(f"{room.region[0].upper()}", end='')
+                        self.map_logger.info(f"{room.region[0].upper()}", end='')
                     else:
-                        print(f"X", end='')
+                        self.map_logger.info(f"X", end='')
                 else:
-                    print(" ", end='')  # Two spaces for empty areas
-            print()  # Newline after each row
+                    self.map_logger.info(" ", end='')  # Two spaces for empty areas
+            self.map_logger.info()  # Newline after each row
 
     def calculate_map_dimensions(self, map_instance):
         total_rooms = len(map_instance.rooms)
         map_width = int(math.sqrt(total_rooms))
         map_height = math.ceil(total_rooms / map_width)
         return map_width, map_height
-
-
-# words_file = 'words.json'
-# with open(words_file, 'r') as file:
-#     data = json.load(file)
-# map = Map(25)
-# region_assignment = RegionAssignment(map, data['locations'])
-# print("assigned regions successfully")

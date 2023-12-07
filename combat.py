@@ -2,12 +2,9 @@ import logging
 import pygame
 import random
 
-# Configure logging
-logging.basicConfig(filename='boot.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 class Combat:
     def __init__(self, player, is_attacker, enemy_manager, message_display):
+        self.combat_logger = logging.getLogger('combat')
         self.player = player
         self.is_player_attacker = is_attacker
         self.enemy_manager = enemy_manager
@@ -66,7 +63,7 @@ class Combat:
         if self.winner == self.player:
             # Player wins the combat
             defeated_enemy = self.defender if self.is_player_attacker else self.attacker
-            self.message_display.add_message(f"{self.player.name} as defeated {defeated_enemy}.")
+            self.message_display.add_message(f"{self.player.name} has defeated {defeated_enemy.name}.")
             # Remove defeated enemy from the game
             self.enemy_manager.enemies.remove(defeated_enemy)
             self.player.current_room.enemies.remove(defeated_enemy)

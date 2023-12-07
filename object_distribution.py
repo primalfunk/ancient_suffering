@@ -1,13 +1,16 @@
 import json
+import logging
 import random
+
 
 class ObjectDistribution:
     def __init__(self, map_instance):
+        self.map_logger = logging.getLogger('map')
         self.map = map_instance
         self.placement_rooms = [room for room in self.map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
-        print(f"ObjectDistribution received {len(self.placement_rooms)} placement spots, needs 11.")
+        self.map_logger.debug(f"ObjectDistribution received {len(self.placement_rooms)} placement spots, needs 11.")
         if len(self.placement_rooms) < 11:
-            print(f"Not enough rooms for placement.")
+            self.map_logger.warning(f"Not enough rooms for placement.")
         with open('words.json', 'r') as file:
             object_data = json.load(file)["objects"]
             self.tool_data = object_data["tools"]  # One of each tool
@@ -47,12 +50,12 @@ class ObjectDistribution:
                 if (x, y) in self.map.rooms:
                     room = self.map.rooms[(x, y)]
                     if room.decorations:
-                        print(self.get_category_letter(room.decorations[0]), end=' ')
+                        self.map_logger.info(self.get_category_letter(room.decorations[0]), end=' ')
                     else:
-                        print('x', end=' ')
+                        self.map_logger.info('x', end=' ')
                 else:
-                    print(' ', end=' ')
-            print()
+                    self.map_logger.info(' ', end=' ')
+            self.map_logger.info()
 
     def is_item_pickable(self, item):
         category_letter = self.get_category_letter(item)

@@ -1,15 +1,13 @@
-import logging
+import logging_config
 import os
 import pygame
 import tkinter as tk
 from title_screen import TitleScreen
 from game_manager import GameManager
 from map import Map
-# Configure logging
-logging.basicConfig(filename='boot.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 if __name__ == "__main__":
+    logging_config.setup_logging()
     root = tk.Tk()
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()

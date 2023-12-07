@@ -1,11 +1,13 @@
 from combat import Combat
 import json
+import logging
 import pygame
 from message_display import MessageDisplay
 from room_display import RoomDisplay
 
 class UI: 
     def __init__(self, screen, player, window_width, window_height, game_manager):
+        boot_logger = logging.getLogger('boot')
         self.screen = screen
         self.n_button_rect = None
         self.s_button_rect = None

@@ -3,11 +3,10 @@ from map_elaborator import MapElaborator
 import random
 from room import Room
 from room_connector import RoomConnector
-logging.basicConfig(filename='map.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Map:
     def __init__(self, size):
+        self.map_logger = logging.getLogger('map')
         self.size = size
         self.rooms = {}
         self.generate_map()
@@ -23,7 +22,7 @@ class Map:
         room_id = len(self.rooms) + 1
         room = Room(room_id, *pos)
         self.rooms[pos] = room
-        logging.debug(f"Created room with ID: {room_id} at position {pos}")
+        self.map_logger.debug(f"Created room with ID: {room_id} at position {pos}")
         return room
 
     def reconnect_room(self, room):

@@ -1,10 +1,9 @@
 import logging
 import pygame
-# Configure logging
-logging.basicConfig(filename='boot.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 class TitleScreen:
     def __init__(self, screen):
+        self.boot_logger = logging.getLogger('boot')
         self.screen = screen
         self.running = True
         self.font_large = pygame.font.Font(None, 80)  # Large font for the title
@@ -12,12 +11,12 @@ class TitleScreen:
 
     def init_music(self, volume):
         pygame.mixer.init()
-        logging.info("Initializing the music in pygame mixer")
+        self.boot_logger.info("Initializing the music in pygame mixer")
         pygame.mixer.music.load('bgmusic.mp3')
-        logging.info("Loading the music track")
+        self.boot_logger.info("Loading the music track")
         pygame.mixer.music.set_volume(volume)
         pygame.mixer.music.play(-1)  # Loop the music
-        logging.info("Started the track")
+        self.boot_logger.info("Started the track")
 
     def render_text(self):
         title_text = self.font_large.render("The Endless Anguish", True, (211, 211, 211))  # Very light gray color
@@ -47,6 +46,6 @@ class TitleScreen:
                 exit()
             elif event.type == pygame.KEYDOWN:
                 pygame.mixer.music.stop()
-                logging.debug("Keydown detected, music stopped; exiting Title state")
+                self.boot_logger.debug("Keydown detected, music stopped; exiting Title state")
                 return True
         return False
