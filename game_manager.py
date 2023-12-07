@@ -13,9 +13,9 @@ logging.basicConfig(filename='game_log.log', level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
                     
 class GameManager:
-    def __init__(self, game_map):
+    def __init__(self, game_map, screen):
+        self.screen = screen
         logging.debug("Initializing GameManager...")
-        pygame.init()
         self.game_map = game_map
         logging.debug("Map initialized.")
 
