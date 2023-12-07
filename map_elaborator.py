@@ -4,7 +4,7 @@ from region_assignment import RegionAssignment
 from room_decoration import RoomDecoration
 from object_distribution import ObjectDistribution
 # Configure logging
-logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+logging.basicConfig(filename='map.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MapElaborator:
@@ -22,5 +22,5 @@ class MapElaborator:
         self.room_decoration.decorate_rooms()
 
         self.object_distribution = ObjectDistribution(self.map)
-        logging.debug("OBjects distributed.")
+        logging.debug("Objects distributed.")
         self.object_distribution.distribute_items()

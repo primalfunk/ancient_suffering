@@ -3,7 +3,7 @@ import logging
 from map_elaborator import MapElaborator
 import random
 from room import Room
-logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+logging.basicConfig(filename='map.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Map:

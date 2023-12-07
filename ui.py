@@ -58,10 +58,10 @@ class UI:
         border_color = (144, 238, 144)
         pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
         self.screen.blit(lower_ui_surface, (0, self.window_height * 3 // 4))
-        self.render_player_stats()
+        self.render_player_stats(self.screen)
         self.message_display.render(self.screen)
 
-    def render_player_stats(self):
+    def render_player_stats(self, screen):
         custom_font = pygame.font.Font('customfont.ttf', 20)
         stats_surface = pygame.Surface((self.window_height - 160, 160))
         stats_surface.fill((50, 50, 50))
@@ -77,12 +77,10 @@ class UI:
         second_column_color = (152, 251, 152)  # pale green
         third_column_color = (230, 230, 250)  # lavender
         fourth_area_color = (255, 253, 208)  # cream
-        
         # Drawing column borders
         def draw_column_border(x_offset, color):
             border_rect = pygame.Rect(x_offset - quarter_width // 2, 0, quarter_width, 160)
             pygame.draw.rect(stats_surface, color, border_rect, 2)
-        
         draw_column_border(first_column_offset, first_column_color)
         draw_column_border(second_column_offset, second_column_color)
         draw_column_border(third_column_offset, third_column_color)
@@ -114,7 +112,7 @@ class UI:
             armor_surface = custom_font.render(armor_text, True, fourth_area_color)
             stats_surface.blit(armor_surface, (fourth_column_offset - (armor_surface.get_width() // 2), y_offset))
         half_window_width = self.window_width // 2
-        self.screen.blit(stats_surface, (half_window_width, self.window_height - 160))
+        screen.blit(stats_surface, (half_window_width, self.window_height - 160))
 
     def render_middle_button_and_inventory_frame(self, surface, padding):
         section_width = (surface.get_width() - 2 * padding) // 3

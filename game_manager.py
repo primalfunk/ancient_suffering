@@ -9,28 +9,23 @@ import random
 from ui import UI
 
 # Configure logging
-logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+logging.basicConfig(filename='boot.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
-                    
+
 class GameManager:
     def __init__(self, game_map, screen):
+        self.current_state = "title_screen"
+        self.fade_in_done = False
         self.screen = screen
-        logging.debug("Initializing GameManager...")
+        self.fullscreen = True
         self.game_map = game_map
-        logging.debug("Map initialized.")
-
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
-        logging.debug("Player initialized.")
-
         self.player_move_count = 0
         self.enemies_manager = EnemyManager(game_map, self.player, self.player_move_count)
-        logging.debug("EnemyManager initialized.")
-
         self.combat = None
         self.staggered_enemies = False
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
-        logging.debug("MapVisualizer initialized.")
         cell_size = 25
         connection_size = cell_size // 3
         padding = 2
@@ -57,31 +52,17 @@ class GameManager:
             new_region_name = new_room.region.replace('_', ' ')
             self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_region_name.lower()}, x,y: [{new_room.x}, {new_room.y}])")
             # call the method here to change the text of the ui.middle_button
-
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
 
-    def run_game_loop(self):
-        running = True
-        while running:
-            events = pygame.event.get()  # Store the list of events
-            for event in events:
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
-                        # Restart the game
-                        self.restart_game()
-                    else:
-                        self.process_keypress(event)
-            self.ui.process_input(events)
-            # Rest of the game loop
-            self.screen.fill((0, 0, 0))
-            self.ui.room_display.display_room_info()
-            self.ui.update_ui()
-            half_window_width = self.window_width // 2
-            self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
-            pygame.display.flip()
+    def update(self):
+        # Update game state for a single frame
+        self.screen.fill((0, 0, 0))
+        self.ui.room_display.display_room_info(self.screen)
+        self.ui.update_ui()
+        half_window_width = self.window_width // 2
+        self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
+        pygame.display.flip()
 
     def direction_to_delta(self, direction):
         return {
@@ -121,7 +102,32 @@ class GameManager:
         elif event.key == pygame.K_q:
             pygame.quit()
             exit(0)  # Quit the game
-
         if direction:
             self.move_player(direction)
             self.enemies_manager.move_enemies()
+
+    def toggle_fullscreen(self):
+        self.fullscreen = not self.fullscreen
+        if self.fullscreen:
+            pygame.display.set_mode((self.window_width, self.window_height), pygame.FULLSCREEN)
+        else:
+            pygame.display.set_mode((self.window_width, self.window_height))
+
+    def draw_initial_ui_onto_surface(self, surface):
+        # Draw the room information onto fade_surface
+        self.ui.room_display.display_room_info(surface)
+        self.ui.render_player_stats(surface)
+        # Draw the lower part of the UI onto fade_surface
+        lower_ui_surface = pygame.Surface((self.window_width // 2, self.window_height // 4))
+        lower_ui_surface.fill((0, 0, 0))
+        padding = 10
+        self.ui.render_middle_button_and_inventory_frame(lower_ui_surface, padding)
+        self.ui.render_direction_buttons(lower_ui_surface, padding)
+        border_color = (144, 238, 144)
+        pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
+        surface.blit(lower_ui_surface, (0, self.window_height * 3 // 4))
+        # Draw player stats and message display onto fade_surface
+        self.ui.message_display.render(surface)
+        # Draw the map onto fade_surface
+        half_window_width = self.window_width // 2
+        self.map_visualizer.draw_map(surface, offset_x=half_window_width)

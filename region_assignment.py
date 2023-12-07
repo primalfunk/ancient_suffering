@@ -6,7 +6,7 @@ import math
 import random
 
 # Configure logging
-logging.basicConfig(filename='game_log.log', level=logging.DEBUG, 
+logging.basicConfig(filename='map.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RegionAssignment:
@@ -17,7 +17,6 @@ class RegionAssignment:
         self.adjust_region_borders()
 
     def assign_regions(self):
-        logging.info("Assigning regions...")
         unassigned_rooms = set(self.map.rooms.keys())
         shuffled_regions = list(self.locations.items())
         random.shuffle(shuffled_regions)
@@ -31,8 +30,6 @@ class RegionAssignment:
                 start_pos = random.choice(list(unassigned_rooms))
                 grown_size = self.grow_region(start_pos, region, unassigned_rooms, data['total_zones'])
                 data['total_zones'] -= grown_size
-                logging.debug(f"Region {region} grown by {grown_size} rooms.")
-
 
     def grow_region(self, start_pos, region, unassigned_rooms, max_size):
         queue = deque([start_pos])
@@ -57,7 +54,6 @@ class RegionAssignment:
         unassigned_rooms.remove(pos)
 
     def adjust_region_borders(self):
-        logging.info("Adjusting region borders...")
         unassigned_rooms = {pos for pos, room in self.map.rooms.items() if room.region is None}
         iteration_count = 0
 
@@ -71,7 +67,6 @@ class RegionAssignment:
                 break
 
     def adjust_room_region(self, pos, unassigned_rooms):
-        logging.debug(f"Adjusting region for room at {pos}...")
         neighbors = self.get_adjacent_positions(pos)
         best_region = None
         max_neighbors = 0
@@ -83,15 +78,11 @@ class RegionAssignment:
                 if count > max_neighbors:
                     max_neighbors = count
                     best_region = neighbor_room.region
-
         if best_region:
             room = self.map.rooms[pos]
             room.region = best_region
             room.name = random.choice(self.locations[best_region]['zone_names'])
             unassigned_rooms.remove(pos)
-        else:
-            logging.debug(f"No adjacent regions found for room at {pos}.")
-    
 
     def count_region_neighbors(self, pos, region):
         count = 0

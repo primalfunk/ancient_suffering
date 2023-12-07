@@ -26,7 +26,7 @@ class RoomDisplay:
         lines.append(current_line)
         return lines
 
-    def display_room_info(self):
+    def display_room_info(self, screen):
         current_room_id = (self.player.current_room.x, self.player.current_room.y)
         if current_room_id != self.last_room_id or self.player_inventory_change:
             self.update_room_info_text()
@@ -41,7 +41,7 @@ class RoomDisplay:
         self.render_room_text(room_info_surface, container_width, padding, division_y)
         border_color = (144, 238, 144)
         pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), 1)
-        self.screen.blit(room_info_surface, (0, 0))
+        screen.blit(room_info_surface, (0, 0))
 
     def update_room_info_text(self):
         being = ['find yourself in ', 'are in ', 'have reached ', 'have arrived at ', 'are standing in ']
