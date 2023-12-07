@@ -22,7 +22,7 @@ class UI:
         self.to_render = []
         self.game_manager = game_manager
         self.room_display = RoomDisplay(screen, player, self.custom_font, (window_width, window_height))
-        message_display_height = 300  # Adjust as needed
+        message_display_height = 300
         self.message_display = MessageDisplay(
             x=0, 
             y=2*self.window_height // 3 - message_display_height, 
@@ -255,5 +255,4 @@ class UI:
                     self.message_display.add_message(f"You equipped the {item}.")
                     self.player.equip_item(item, item_category)
                 self.room_display.display_room_info()
-
                 break

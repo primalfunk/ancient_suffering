@@ -10,7 +10,7 @@ class TitleScreen:
 
     def init_music(self):
         pygame.mixer.init()
-        pygame.mixer.music.load('bgmusic.wav')
+        pygame.mixer.music.load('bgmusic.mp3')
         pygame.mixer.music.play(-1)  # Loop the music
 
     def render_text(self):
@@ -36,6 +36,7 @@ class TitleScreen:
                     pygame.quit()
                     exit()
                 elif event.type == pygame.KEYDOWN:
+                    pygame.mixer.music.stop()  
                     self.running = False  # Any key press ends the title loop
 
             self.screen.fill((0, 0, 0))  # Fill the screen with black or your chosen background color
