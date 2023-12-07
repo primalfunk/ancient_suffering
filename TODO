@@ -1,7 +1,6 @@
 TODOS
-- finish debugging level system prototype and end of combat
+- add sound effects for room moves; different one for 'wrong way' moves
+- add separate music for combat
 - for room and region names, designate matching collections of regions so each reset has a common theme
-- add experience and level system
 - add merchant and trainer NPCs
-- work out dimensionality of the room display
 - start planning the game loop; is map solution taking out all the enemies?

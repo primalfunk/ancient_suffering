@@ -13,30 +13,29 @@ logging.basicConfig(filename='boot.log', level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 class GameManager:
-    def __init__(self, game_map, screen):
-        self.is_combat = False
-        self.current_state = "title_screen"
-        self.fade_in_done = False
-        self.screen = screen
-        self.fullscreen = True
-        self.game_map = game_map
-        start_room = random.choice(list(self.game_map.rooms.values()))
-
-        self.player = Player(start_room) # create the player
-        self.player_move_count = 0
-        self.enemy_manager = EnemyManager(game_map, self.player, self.player_move_count) # create the enemies
-        self.combat = None
-        self.staggered_enemies = False
-        self.map_visualizer = MapVisualizer(self, game_map, self.player)
+    def __init__(self, screen):
+        self.game_map = Map(25) # instantiate the Map
         cell_size = 25
         connection_size = cell_size // 3
         padding = 2
-        window_size = game_map.size * cell_size + (game_map.size - 1) * connection_size + padding * 2
+        window_size = self.game_map.size * cell_size + (self.game_map.size - 1) * connection_size + padding * 2
         self.window_width = window_size
         self.window_height = window_size + 160
         self.window_width *= 2
         self.screen = pygame.display.set_mode([self.window_width, self.window_height])
+        self.combat = None
+        self.staggered_enemies = False
+        self.player_move_count = 0
+        self.is_combat = False
+        self.fade_in_done = False
+        self.screen = screen
+        self.fullscreen = True
+        start_room = random.choice(list(self.game_map.rooms.values()))
+        self.player = Player(start_room) # instantiate the Player
+        self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count) # instantiate the EnemyManager
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player) # instantiate the MapVisualizer
         pygame.display.set_caption("Journey to a Finished Game")
+        self.current_state = "title_screen"
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
 
     def move_player(self, direction):
@@ -52,7 +51,7 @@ class GameManager:
             self.map_visualizer.explored.add((new_room.x, new_room.y))
             self.map_visualizer.update_light_levels(visibility_radius=3)
             new_region_name = new_room.region.replace('_', ' ')
-            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_region_name.lower()}, x,y: [{new_room.x}, {new_room.y}])")
+            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_room.x}, {new_room.y})")
             # call the method here to change the text of the ui.middle_button
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
@@ -79,7 +78,6 @@ class GameManager:
         # Reinitialize the Map, Player, EnemyManager, UI, etc.
         logging.debug("Restarting game...")
         logging.debug("Creating the Map...")
-        self.game_map = Map(25)  # Assuming 25 is the map size
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
         self.player_move_count = 0

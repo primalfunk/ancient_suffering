@@ -10,11 +10,12 @@ class TitleScreen:
         self.font_large = pygame.font.Font(None, 80)  # Large font for the title
         self.font_small = pygame.font.Font(None, 30)  # Smaller font for the instruction
 
-    def init_music(self):
+    def init_music(self, volume):
         pygame.mixer.init()
         logging.info("Initializing the music in pygame mixer")
         pygame.mixer.music.load('bgmusic.mp3')
         logging.info("Loading the music track")
+        pygame.mixer.music.set_volume(volume)
         pygame.mixer.music.play(-1)  # Loop the music
         logging.info("Started the track")
 

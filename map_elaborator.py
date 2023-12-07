@@ -17,10 +17,10 @@ class MapElaborator:
         logging.debug("Regions assigned, decorating rooms...")
         self.region_assignment.assign_regions()
 
-        self.room_decoration = RoomDecoration(self.map, data)
-        logging.debug("Rooms decorated, distributing objects...")
-        self.room_decoration.decorate_rooms()
-
         self.object_distribution = ObjectDistribution(self.map)
         logging.debug("Objects distributed.")
         self.object_distribution.distribute_items()
+
+        self.room_decoration = RoomDecoration(self.map, data)
+        logging.debug("Rooms decorated, distributing objects...")
+        self.room_decoration.decorate_rooms()

@@ -53,5 +53,5 @@ class Player:
         if self.exp >= 25:
             self.level += 1
             self.exp -= 25
-            return True  # Reset exp after level up
+            return True  # if it happened, return True
         return False

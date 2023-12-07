@@ -17,10 +17,9 @@ class MessageDisplay:
         if len(self.messages) >= self.max_messages:
             self.messages.pop(0)
         self.messages.append(message)
-        total_text_height = len(self.messages) * self.font.get_height() + self.vertical_pad
-        if total_text_height > self.height:
-            num_visible_lines = (self.height - self.vertical_pad) // self.font.get_height()
-            self.scroll_pos = len(self.messages) - num_visible_lines
+        total_text_height = len(self.messages) * self.font.get_height()
+        if total_text_height > self.height - self.vertical_pad:
+            self.scroll_pos = max(0, len(self.messages) - (self.height - self.vertical_pad) // self.font.get_height())
         else:
             self.scroll_pos = 0
 
@@ -31,23 +30,18 @@ class MessageDisplay:
     def render(self, surface):
         surface_area = pygame.Rect(self.x, self.y, self.width, self.height)
         surface.set_clip(surface_area)
-
         y_offset = self.y + self.vertical_pad - self.scroll_pos * self.font.get_height()
         for message in self.messages:
-            wrapped_lines = self.wrap_text(message, self.width - self.horizontal_pad)
+            wrapped_lines = self.wrap_text(message, self.width - self.horizontal_pad * 2)
             for line in wrapped_lines:
+                text_surface = self.font.render(line, True, (255, 255, 255))
+                text_height = text_surface.get_height()
+                if y_offset + text_height <= self.y + self.height:
+                    surface.blit(text_surface, (self.x + self.horizontal_pad, y_offset))
+                y_offset += text_height
                 if y_offset >= self.y + self.height:
                     break
-                text_surface = self.font.render(line, True, (255, 255, 255))
-                surface.blit(text_surface, (self.x + self.horizontal_pad, y_offset))
-                y_offset += self.font.get_height()
-                if y_offset + self.vertical_pad >= self.y + self.height:
-                    break
-
-        # Draw a single line at the top of the message area
-        line_color = (144, 236, 144)
-        pygame.draw.line(surface, line_color, (self.x, self.y), (self.x + self.width, self.y), 2)  # Line thickness set to 2
-
+        pygame.draw.line(surface, (144, 236, 144), (self.x, self.y), (self.x + self.width, self.y), 2)
         surface.set_clip(None)
 
     def wrap_text(self, text, max_width):

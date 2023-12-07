@@ -29,65 +29,67 @@ class Combat:
         
         self.turn = 'attacker'
 
+    def attack(self, attacker, defender):
+        if random.randint(0, 100) >= defender.eva:
+            damage = max(attacker.atk - defender.defn, 0)
+            defender.hp -= damage
+            self.message_display.add_message(f"{attacker.name} hits {defender.name} for {damage} damage.")
+
     def update(self):
         current_time = pygame.time.get_ticks()
         if current_time - self.last_update_time > 1000:
             if self.turn == 'attacker':
-                if random.randint(0, 100) >= self.defender.eva:
-                    damage = max(self.attacker.atk - self.defender.defn, 0)
-                    self.defender.hp -= damage
-                    self.message_display.add_message(f"{self.attacker.name} hits {self.defender.name} for {damage} damage.")
+                self.attack(self.attacker, self.defender)
                 self.turn = 'defender'
             elif self.turn == 'defender':
-                if random.randint(0, 100) >= self.attacker.eva:
-                    damage = max(self.defender.atk - self.attacker.defn, 0)
-                    self.attacker.hp -= damage
-                    self.message_display.add_message(f"{self.defender.name} hits {self.attacker.name} for {damage} damage.")
+                self.attack(self.defender, self.attacker)
                 self.turn = 'attacker'
-            if self.attacker.hp <= 0 or self.defender.hp <= 0:
-                self.resolve_combat()
+            self.check_combat_end()
             self.last_update_time = current_time
 
+    def check_combat_end(self):
+        if self.attacker.hp <= 0 or self.defender.hp <= 0:
+            self.resolve_combat()
+
+    def determine_winner(self):
+        if self.attacker.hp > self.defender.hp:
+            self.winner = self.attacker
+        elif self.defender.hp > self.attacker.hp:
+            self.winner = self.defender
+        else:
+            self.winner = None
+        winner_name = self.winner.name if self.winner else "None"
+        self.message_display.add_message(f"Combat has ended. Winner: {winner_name}")
+
+    def combat_over(self):
+        # Handling the combat outcome
+        if self.winner == self.player:
+            # Player wins the combat
+            defeated_enemy = self.defender if self.is_player_attacker else self.attacker
+            self.message_display.add_message(f"{self.player.name} as defeated {defeated_enemy}.")
+            # Remove defeated enemy from the game
+            self.enemy_manager.enemies.remove(defeated_enemy)
+            self.player.current_room.enemies.remove(defeated_enemy)
+            # Convert defeated enemy to a decoration
+            corpse_item = f"corpse ({defeated_enemy.name})"
+            self.player.current_room.decorations.append(corpse_item)
+            # Award experience to the player
+            self.player.exp += defeated_enemy.exp
+            self.message_display.add_message(f"{self.player.name} gains {defeated_enemy.exp} experience.")
+            if self.player.check_level_up():
+                self.message_display.add_message(f"{self.player.name} has leveled up! New level is {self.player.level}")
+        elif self.winner != self.player and self.player.hp <= 0:
+            # Player is defeated
+            self.message_display.add_message(f"{self.player.name} defeated, game over. Press (q) to quit or (r) to restart.")
+            self.disable_inputs_except_quit_restart()
+        self.is_over = True
+        return self.is_over
+        
     def resolve_combat(self):
         self.attacker.in_combat = False
         self.defender.in_combat = False
         self.determine_winner()
         self.combat_over()
-
-    def determine_winner(self):
-        if self.attacker.hp > self.defender.hp:
-            self.winner = "player" if self.is_player_attacker else "enemy"
-        elif self.defender.hp > self.attacker.hp:
-            self.winner = "enemy" if self.is_player_attacker else "player"
-        else:
-            self.winner = None
-        self.message_display.add_message(f"Combat has ended. Winner: {self.winner}")
-
-    def combat_over(self):
-        if self.player.hp > 0:
-            self.player.check_level_up()    
-            self.message_display.add_message(f"Congratulations, {self.defender.name} gained a level! You are now level {self.defender.level}")
-        if self.winner == "player" and self.is_player_attacker:
-            if self.defender in self.enemy_manager.enemies:
-                self.enemy_manager.enemies.remove(self.defender) # remove defeated enemy from enemy_manager list (won't be moved anymore)
-            if self.defender in self.attacker.current_room.enemies:
-                self.attacker.current_room.enemies.remove(self.defender) # remove defeated enemy from the room
-            self.attacker.exp += self.defender.exp
-            self.message_display.add_message(f"{self.attacker.name} gains {self.defender.exp} experience.")
-        elif self.winner == "player" and not self.is_player_attacker:
-            self.enemy_manager.enemies.remove(self.attacker)
-            self.defender.current_room.enemies.remove(self.attacker)
-            self.defender.exp += self.attacker.exp
-            self.message_display.add_message(f"{self.defender.name} gains {self.attacker.exp} experience.")
-
-        elif self.winner == "enemy":
-            # Player defeat logic
-            self.message_display.add_message(f"{self.attacker.name} defeated, game over. Press (q) to quit or (r) to restart.")
-            self.disable_inputs_except_quit_restart()
-        
-        self.is_over = True
-        return self.is_over
-        
     
     def disable_inputs_except_quit_restart(self):
         pass

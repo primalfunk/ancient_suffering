@@ -12,6 +12,7 @@ class MapVisualizer:
         self.connection_size = self.cell_size // 3  # Size of the connections
         self.padding = 2  # Padding around the map
         self.region_color_mapping, self.region_colors = self.generate_region_colors()
+        self.dead_ends = [room for room in self.game_map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
         self.explored = set() 
         self.explored.add((player.x, player.y))
 
@@ -46,13 +47,16 @@ class MapVisualizer:
             if room.lit > 0:
                 region_index = self.region_color_mapping.get(room.region, 0)
                 base_room_color = self.region_colors[region_index]
+                base_dead_end_color = (155, 155, 0) # color for dead ends with items in them
                 room_color = self.get_color_intensity(base_room_color, room.lit)
                 if room_pos == (self.player.x, self.player.y):
-                    pygame.draw.rect(screen, (255, 0, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2)
+                    pygame.draw.rect(screen, (0, 255, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2) # Player's border
                     room_color = (0, 0, 255)  # Player's room
                 elif room_pos in enemy_positions:
                     base_enemy_color = (255, 0, 0)  # Enemy's room
                     room_color = self.get_color_intensity(base_enemy_color, room.lit)
+                elif room in self.dead_ends and len(room.decorations) > 0:
+                    room_color = self.get_color_intensity(base_dead_end_color, room.lit)
                 self.draw_connectionless_edges(screen, room, x, y)
             else:
                 room_color = (0, 0, 0)
@@ -62,11 +66,12 @@ class MapVisualizer:
                     self.draw_connection(screen, x, y, direction)
             # Draw an asterisk in the room if it has decorations
             if len(room.decorations) > 0 and room.lit > 0:
-                asterisk_font = pygame.font.Font(None, 12)  # Choose an appropriate font size
-                symbol = "*"
-                asterisk_surface = asterisk_font.render(symbol, True, (200, 200, 200))  # White asterisk
-                asterisk_rect = asterisk_surface.get_rect(center=(x + self.cell_size // 2, y + self.cell_size // 2))
-                screen.blit(asterisk_surface, asterisk_rect.topleft)
+                pass
+                # asterisk_font = pygame.font.Font(None, 12)  # Choose an appropriate font size
+                # symbol = "*"
+                # asterisk_surface = asterisk_font.render(symbol, True, (200, 200, 200))  # White asterisk
+                # asterisk_rect = asterisk_surface.get_rect(center=(x + self.cell_size // 2, y + self.cell_size // 2))
+                # screen.blit(asterisk_surface, asterisk_rect.topleft)
 
     def update_light_levels(self, visibility_radius):
         for dx in range(-visibility_radius, visibility_radius + 1):
@@ -79,15 +84,19 @@ class MapVisualizer:
                         room.lit = max(room.lit, light_level)
 
     def draw_connection(self, screen, x, y, direction):
+        # Factor to control the size of the connection
+        connection_dimension = self.cell_size * 0.5
+
         if direction == 'e':  # East
-            connection_rect = (x + self.cell_size, y + self.cell_size / 3, self.connection_size, self.connection_size)
+            connection_rect = (x + self.cell_size, y + self.cell_size / 2 - connection_dimension / 2, self.connection_size, connection_dimension)
         elif direction == 's':  # South
-            connection_rect = (x + self.cell_size / 3, y + self.cell_size, self.connection_size, self.connection_size)
+            connection_rect = (x + self.cell_size / 2 - connection_dimension / 2, y + self.cell_size, connection_dimension, self.connection_size)
         elif direction == 'w':  # West
-            connection_rect = (x - self.connection_size, y + self.cell_size / 3, self.connection_size, self.connection_size)
+            connection_rect = (x - self.connection_size, y + self.cell_size / 2 - connection_dimension / 2, self.connection_size, connection_dimension)
         elif direction == 'n':  # North
-            connection_rect = (x + self.cell_size / 3, y - self.connection_size, self.connection_size, self.connection_size)
-        pygame.draw.rect(screen, (150, 150, 150), connection_rect)
+            connection_rect = (x + self.cell_size / 2 - connection_dimension / 2, y - self.connection_size, connection_dimension, self.connection_size)
+
+        pygame.draw.rect(screen, (140, 140, 140), connection_rect)
     
     def draw_connectionless_edges(self, screen, room, x, y):
         border_color = (30, 30, 30)  # Dark color

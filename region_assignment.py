@@ -56,12 +56,10 @@ class RegionAssignment:
     def adjust_region_borders(self):
         unassigned_rooms = {pos for pos, room in self.map.rooms.items() if room.region is None}
         iteration_count = 0
-
         while unassigned_rooms:
             for pos in list(unassigned_rooms):
                 self.adjust_room_region(pos, unassigned_rooms)
             iteration_count += 1
-
             if iteration_count > len(self.map.rooms):
                 logging.warning("Infinite loop detected in adjust_region_borders. Breaking out of loop.")
                 break
@@ -70,7 +68,6 @@ class RegionAssignment:
         neighbors = self.get_adjacent_positions(pos)
         best_region = None
         max_neighbors = 0
-
         for neighbor_pos in neighbors:
             neighbor_room = self.map.rooms.get(neighbor_pos)
             if neighbor_room and neighbor_room.region:
@@ -103,7 +100,6 @@ class RegionAssignment:
             adjacent_positions.append((x + 1, y))
         if (x - 1, y) in self.map.rooms:
             adjacent_positions.append((x - 1, y))
-
         return adjacent_positions
 
     def visualize_map(self, map_instance):
