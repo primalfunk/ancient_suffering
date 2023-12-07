@@ -1,6 +1,6 @@
 TODOS
+- finish debugging level system prototype and end of combat
 - for room and region names, designate matching collections of regions so each reset has a common theme
-- build combat class
 - add experience and level system
 - add merchant and trainer NPCs
 - work out dimensionality of the room display

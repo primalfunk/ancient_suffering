@@ -14,15 +14,17 @@ logging.basicConfig(filename='boot.log', level=logging.DEBUG,
 
 class GameManager:
     def __init__(self, game_map, screen):
+        self.is_combat = False
         self.current_state = "title_screen"
         self.fade_in_done = False
         self.screen = screen
         self.fullscreen = True
         self.game_map = game_map
         start_room = random.choice(list(self.game_map.rooms.values()))
-        self.player = Player(start_room)
+
+        self.player = Player(start_room) # create the player
         self.player_move_count = 0
-        self.enemies_manager = EnemyManager(game_map, self.player, self.player_move_count)
+        self.enemy_manager = EnemyManager(game_map, self.player, self.player_move_count) # create the enemies
         self.combat = None
         self.staggered_enemies = False
         self.map_visualizer = MapVisualizer(self, game_map, self.player)
@@ -62,6 +64,7 @@ class GameManager:
         self.ui.update_ui()
         half_window_width = self.window_width // 2
         self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
+        self.check_for_combat()
         pygame.display.flip()
 
     def direction_to_delta(self, direction):
@@ -80,7 +83,7 @@ class GameManager:
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
         self.player_move_count = 0
-        self.enemies_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
+        self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
         logging.debug("Game restarted successfully.")
@@ -104,7 +107,7 @@ class GameManager:
             exit(0)  # Quit the game
         if direction:
             self.move_player(direction)
-            self.enemies_manager.move_enemies()
+            self.enemy_manager.move_enemies()
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -131,3 +134,7 @@ class GameManager:
         # Draw the map onto fade_surface
         half_window_width = self.window_width // 2
         self.map_visualizer.draw_map(surface, offset_x=half_window_width)
+
+    def check_for_combat(self):
+        self.is_combat = self.player.in_combat
+        return self.is_combat

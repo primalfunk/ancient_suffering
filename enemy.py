@@ -3,14 +3,15 @@ class Enemy:
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
         self.current_room.enemies.append(self)
+        self.in_combat = False
         self.name = "Enemy"
-        self.str = 0
-        self.dex = 0
+        self.atk = 15
+        self.defn = 5
         self.int = 0
         self.wis = 0
         self.con = 0
-        self.cha = 0
-        self.exp = 30 # experience reward for player
+        self.eva = 0
+        self.exp = 30
         self.level = 0
         self.hp = 30
         self.mp = 10

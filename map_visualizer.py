@@ -38,7 +38,7 @@ class MapVisualizer:
     def draw_map(self, screen, offset_x = 0):
         visibility_radius = 3 # default 3, + 2 with torch
         self.update_light_levels(visibility_radius)
-        enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemies_manager.enemies}
+        enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemy_manager.enemies}
         for room in self.game_map.rooms.values():
             x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
             y = room.y * (self.cell_size + self.connection_size) + self.padding

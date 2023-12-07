@@ -4,15 +4,16 @@ class Player:
     def __init__(self, start_room):
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
+        self.in_combat = False
         self.name = "PLAYER"
         self.atk = 10 # attack
         self.defn = 10 # defense
-        self.int = 0 # intelligence
-        self.wis = 0 # wisdom
-        self.con = 0 # constitution
-        self.cha = 0 # charisma
+        self.int = 1 # intelligence
+        self.wis = 1 # wisdom
+        self.con = 1 # constitution
+        self.eva = 1 # evasion
         self.exp = 0 # experience
-        self.level = 0
+        self.level = 1
         self.hp = 50
         self.mp = 10
         self.inventory = Inventory()
@@ -46,4 +47,11 @@ class Player:
             self.equipped_armor = None
             self.defn -= 30 # or whatever
         self.current_room.decorations.append(item)
-            
+
+    def check_level_up(self):
+        # Example: Increase level for every 25 exp
+        if self.exp >= 25:
+            self.level += 1
+            self.exp -= 25
+            return True  # Reset exp after level up
+        return False

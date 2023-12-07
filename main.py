@@ -76,6 +76,25 @@ if __name__ == "__main__":
                         game_manager.restart_game()
                     else:
                         game_manager.process_keypress(event)
-            game_manager.ui.process_input(events)
+                
+                
+                if game_manager.check_for_combat():
+                    current_state = 'combat'
+                game_manager.ui.process_input(events)
+
+            if current_state != 'combat':
+                game_manager.update()
+                pygame.display.flip()
+
+        elif current_state == 'combat':
+            # Combat logic
+            game_manager.combat.update()
             game_manager.update()
-            pygame.display.flip()
+
+            events = pygame.event.get()
+            game_manager.ui.process_input(events)
+
+            if game_manager.combat.is_over:
+                game_manager.ui.room_display.player_inventory_change = True
+                current_state = 'game_loop'
+                

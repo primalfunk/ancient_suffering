@@ -66,7 +66,7 @@ class UI:
         stats_surface = pygame.Surface((self.window_height - 160, 160))
         stats_surface.fill((50, 50, 50))
         first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
-        second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'cha']
+        second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'eva']
         third_column_attributes = ['x', 'y']
         quarter_width = (self.window_width // 2) // 4
         first_column_offset = quarter_width - (quarter_width // 2)
@@ -189,7 +189,7 @@ class UI:
             direction = 'e'
         if direction:
             self.game_manager.move_player(direction)
-            self.game_manager.move_enemies()
+            self.game_manager.enemy_manager.move_enemies()
         if self.middle_button_rect and self.middle_button_rect.collidepoint(translated_mouse_pos):
             self.handle_middle_button_click()
 
@@ -213,15 +213,16 @@ class UI:
             if self.item_category_map.get(item, '') in {'T', 'W', 'A', 'K'}:
                 self.middle_button_label = "Pick Up"
                 break
-        for enemy in self.game_manager.enemies_manager.enemies:
+        for enemy in self.game_manager.enemy_manager.enemies:
             if enemy.current_room == self.player.current_room:
                 self.middle_button_label = "Attack"
                 break
 
     def handle_middle_button_click(self):
         if self.middle_button_label == "Attack":
-            self.game_manager.combat = Combat(self.player)
-        
+            self.game_manager.is_combat = True
+            self.game_manager.combat = Combat(self.player, True, self.game_manager.enemy_manager, self.message_display) # attacker, is_player, enemy_manager, message_system
+            
         if self.middle_button_label == "Pick Up":
             for item in self.player.current_room.decorations:
                 item_category = self.item_category_map.get(item, '')
@@ -232,25 +233,26 @@ class UI:
                         self.message_display.add_message(f"You picked up the {item}.")
                     else:
                         self.message_display.add_message(f"Unable to pick up {item}. Your inventory is full.")
-                
                 if item_category in {'W'} and self.player.equipped_weapon is None:
+                    self.room_display.player_inventory_change = True
                     self.player.equip_item(item, item_category)
                     self.message_display.add_message(f"You equipped the {item}.")
-                
                 elif item_category in {'A'} and self.player.equipped_armor is None:
+                    self.room_display.player_inventory_change = True
                     self.player.equip_item(item, item_category)
                     self.message_display.add_message(f"You equipped the {item}.")
-                
                 elif item_category in {'W'} and self.player.equipped_weapon is not None:
+                    self.room_display.player_inventory_change = True
                     self.message_display.add_message(f"You dropped the {self.player.equipped_weapon}.")
                     self.player.unequip_item(self.player.equipped_weapon, item_category)
                     self.player.equip_item(item, item_category)
                     self.message_display.add_message(f"You equipped the {item}.")
-
                 elif item_category in {'A'} and self.player.equipped_armor is not None:
+                    self.room_display.player_inventory_change = True
                     self.message_display.add_message(f"You dropped the {self.player.equipped_armor}.")
                     self.player.unequip_item(self.player.equipped_armor, item_category)
                     self.message_display.add_message(f"You equipped the {item}.")
                     self.player.equip_item(item, item_category)
-                self.room_display.display_room_info()
+                
+                self.room_display.display_room_info(self.screen)
                 break
