@@ -1,6 +1,10 @@
 TODOS
-- add sound effects for room moves; different one for 'wrong way' moves
-- add separate music for combat
-- for room and region names, designate matching collections of regions so each reset has a common theme
-- add merchant and trainer NPCs
+- implement red crystal healing
+- engineer and balance combat
+- for room and region names, designate matching collections of regions so each reset has a common theme; enemy types to match
 - start planning the game loop; is map solution taking out all the enemies?
+- add player name input to title screen
+
+BUGS
+- refresh room display immediately after combat (or if anything dies)
+- reset room lit conditions on game reset

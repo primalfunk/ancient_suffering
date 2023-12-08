@@ -3,7 +3,6 @@ import pygame
 import tkinter as tk
 from title_screen import TitleScreen
 from game_manager import GameManager
-from map import Map
 
 if __name__ == "__main__":
     logging_config.setup_logging()
@@ -14,11 +13,6 @@ if __name__ == "__main__":
     position_y = (screen_height - screen_height) // 2
     pygame.init()
     pygame.mixer.init()
-    win_sound = pygame.mixer.Sound('sounds/applause.wav')
-    lose_sound = pygame.mixer.Sound('sounds/gameover.wav')
-    move_sound = pygame.mixer.Sound('sounds/movement.wav')
-    round_sound = pygame.mixer.Sound('sounds/attack_round.wav')
-    
     screen = pygame.display.set_mode((1600, 900))
 
     title_screen = TitleScreen(screen)
@@ -26,7 +20,7 @@ if __name__ == "__main__":
     fade_in_done = False
 
     # Main game loop
-    title_screen.init_music(0.7)
+    title_screen.init_music(0.75)
     current_state = game_manager.current_state
     while True:
         if current_state == "title_screen":
@@ -35,15 +29,14 @@ if __name__ == "__main__":
                 current_state = "fade_in"
 
         elif current_state == "fade_in" and not fade_in_done:
-            # Create a fully opaque black surface
             fade_surface = pygame.Surface((game_manager.window_width, game_manager.window_height))
-            fade_surface.fill((0, 0, 0))
-            for a in range(255, -1, -5):  # Gradually decrease alpha
+            fade_surface.fill((0, 0, 0)) # black
+            for a in range(255, -1, -5): # fade in by lowering the opacity of the overlaying surface
                 game_manager.draw_initial_ui_onto_surface(screen)
-                fade_surface.set_alpha(a)  # Set new alpha
-                screen.blit(fade_surface, (0, 0))  # Blit the fade_surface onto the screen
-                pygame.display.flip()  # Update the display to show the fade effect
-                pygame.time.delay(45)  # Adjust delay for desired speed
+                fade_surface.set_alpha(a)
+                screen.blit(fade_surface, (0, 0))
+                pygame.display.flip()
+                pygame.time.delay(35)
             fade_in_done = True
             current_state = 'game_loop'
             pygame.mixer.music.play(-1)
@@ -78,7 +71,7 @@ if __name__ == "__main__":
             events = pygame.event.get()
             game_manager.ui.process_input(events)
             if game_manager.combat.is_over:
-                pygame.mixer.music.stop()  # Stop combat music
-                game_manager.combat.resume_regular_music()  # Resume regular music
+                pygame.mixer.music.stop()
+                game_manager.combat.resume_regular_music()
                 current_state = 'game_loop'
                         

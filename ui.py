@@ -21,7 +21,7 @@ class UI:
         self.inventory_item_rects = []
         self.window_width = window_width
         self.window_height = window_height
-        self.custom_font = pygame.font.Font('customfont.ttf', 21)
+        self.custom_font = pygame.font.Font('customfont.ttf', 26)
         self.last_room_id = None
         self.to_render = []
         self.game_manager = game_manager
@@ -73,50 +73,48 @@ class UI:
         stats_surface.fill((50, 50, 50))
         first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
         second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'eva']
-        third_column_attributes = ['x', 'y']
+        third_column_attributes = ['region', 'name', 'x', 'y']
         quarter_width = (self.window_width // 2) // 4
-        first_column_offset = quarter_width - (quarter_width // 2)
-        second_column_offset = 2 * quarter_width - (quarter_width // 2)
-        third_column_offset = 3 * quarter_width - (quarter_width // 2)
-        fourth_column_offset = 4 * quarter_width - (quarter_width // 2)
-        first_column_color = (135, 206, 235)  # soft blue
-        second_column_color = (152, 251, 152)  # pale green
-        third_column_color = (230, 230, 250)  # lavender
-        fourth_area_color = (255, 253, 208)  # cream
-        # Drawing column borders
+        offsets = [quarter_width * (i + 1) - (quarter_width // 2) for i in range(4)]
+        text_color = (144, 236, 144)  # Consistent text color
         def draw_column_border(x_offset, color):
             border_rect = pygame.Rect(x_offset - quarter_width // 2, 0, quarter_width, 160)
             pygame.draw.rect(stats_surface, color, border_rect, 2)
-        draw_column_border(first_column_offset, first_column_color)
-        draw_column_border(second_column_offset, second_column_color)
-        draw_column_border(third_column_offset, third_column_color)
-        draw_column_border(fourth_column_offset, fourth_area_color)
-        for i, attr in enumerate(first_column_attributes):
-            text = f"{attr.title()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, first_column_color)
-            stats_surface.blit(text_surface, (first_column_offset - (text_surface.get_width() // 2), 20 * i))
-        for i, attr in enumerate(second_column_attributes):
-            text = f"{attr.upper()}: {getattr(self.player, attr)}"
-            text_surface = custom_font.render(text, True, second_column_color)
-            stats_surface.blit(text_surface, (second_column_offset - (text_surface.get_width() // 2), 20 * i))
-        for i, attr in enumerate(third_column_attributes):
-            text = f"Lat: {getattr(self.player, 'x')}" if attr == 'x' else f"Lon: {getattr(self.player, 'y')}"
-            text_surface = custom_font.render(text, True, third_column_color)
-            stats_surface.blit(text_surface, (third_column_offset - (text_surface.get_width() // 2), 20 * i))
-        y_offset = 20  # Starting Y offset for the equipment title
+        column_colors = [(135, 206, 235), (152, 251, 152), (230, 230, 250), (255, 253, 208)]
+        for offset, color in zip(offsets, column_colors):
+            draw_column_border(offset, color)
+
+        def render_text_for_column(attributes, offset, get_attr_function):
+            y_offset = self.window_height * 0.02  # 2% of window height
+            for attr in attributes:
+                text = get_attr_function(attr)
+                text_surface = custom_font.render(text, True, text_color)
+                stats_surface.blit(text_surface, (offset - (text_surface.get_width() // 2), y_offset))
+                y_offset += 20
+
+        render_text_for_column(first_column_attributes, offsets[0], lambda attr: f"{attr.title()}: {getattr(self.player, attr)}")
+        render_text_for_column(second_column_attributes, offsets[1], lambda attr: f"{attr.upper()}: {getattr(self.player, attr)}")
+
+        def get_third_column_text(attr):
+            if attr in ['region', 'name']:
+                room_attrs = f"{getattr(self.player.current_room, attr, 'N/A')}".title()
+                return room_attrs.replace('_', ' ')
+            else:
+                player_attrs = f"{getattr(self.player, attr, 'N/A')}".title()
+                return player_attrs.replace('_', ' ')
+
+        render_text_for_column(third_column_attributes, offsets[2], get_third_column_text)
+
+        y_offset = self.window_height * 0.02
         equipment_title = "Equipment"
-        title_surface = custom_font.render(equipment_title, True, fourth_area_color)
-        stats_surface.blit(title_surface, (fourth_column_offset - (title_surface.get_width() // 2), y_offset))
+        title_surface = custom_font.render(equipment_title, True, text_color)
+        stats_surface.blit(title_surface, (offsets[3] - (title_surface.get_width() // 2), y_offset))
         y_offset += 20
-        if self.player.equipped_weapon:
-            weapon_text = f"{self.player.equipped_weapon}"
-            weapon_surface = custom_font.render(weapon_text, True, fourth_area_color)
-            stats_surface.blit(weapon_surface, (fourth_column_offset - (weapon_surface.get_width() // 2), y_offset))
-            y_offset += 20
-        if self.player.equipped_armor:
-            armor_text = f"{self.player.equipped_armor}"
-            armor_surface = custom_font.render(armor_text, True, fourth_area_color)
-            stats_surface.blit(armor_surface, (fourth_column_offset - (armor_surface.get_width() // 2), y_offset))
+        for equipment in [self.player.equipped_weapon, self.player.equipped_armor]:
+            if equipment:
+                equipment_surface = custom_font.render(equipment, True, text_color)
+                stats_surface.blit(equipment_surface, (offsets[3] - (equipment_surface.get_width() // 2), y_offset))
+                y_offset += 20
         half_window_width = self.window_width // 2
         screen.blit(stats_surface, (half_window_width, self.window_height - 160))
 
