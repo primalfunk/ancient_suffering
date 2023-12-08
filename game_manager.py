@@ -6,6 +6,7 @@ from map_visualizer import MapVisualizer
 from player import Player
 import pygame
 import random
+from sound_manager import SoundManager
 from ui import UI
 
 class GameManager:
@@ -34,6 +35,7 @@ class GameManager:
         pygame.display.set_caption("Journey to a Finished Game")
         self.current_state = "title_screen"
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
+        self.sounds = SoundManager()
 
     def move_player(self, direction):
         if direction and self.player.can_move(direction, self.game_map):
@@ -48,8 +50,8 @@ class GameManager:
             self.map_visualizer.explored.add((new_room.x, new_room.y))
             self.map_visualizer.update_light_levels(visibility_radius=3)
             new_region_name = new_room.region.replace('_', ' ')
-            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.lower()} ({new_room.x}, {new_room.y})")
-            # call the method here to change the text of the ui.middle_button
+            self.sounds.play_sound('travel', 0.5)
+            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_region_name}: {new_room.name.lower()} ({new_room.x}, {new_room.y})")
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
 
@@ -72,9 +74,7 @@ class GameManager:
         }.get(direction, (0, 0))
     
     def restart_game(self):
-        # Reinitialize the Map, Player, EnemyManager, UI, etc.
         self.boot_logger.debug("Restarting game...")
-        self.boot_logger.debug("Creating the Map...")
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
         self.player_move_count = 0
@@ -98,11 +98,13 @@ class GameManager:
             if self.ui.middle_button_label == "Pick Up":
                 self.ui.handle_middle_button_click()
         elif event.key == pygame.K_q:
+            self.sounds.play_sound('gameover', 0.75)
+            pygame.time.wait(750)
             pygame.quit()
             exit(0)  # Quit the game
         if direction:
             self.move_player(direction)
-            self.enemy_manager.move_enemies()
+            self.enemy_manager.move_enemies()            
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen

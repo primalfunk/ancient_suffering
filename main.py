@@ -1,5 +1,4 @@
 import logging_config
-import os
 import pygame
 import tkinter as tk
 from title_screen import TitleScreen
@@ -14,6 +13,12 @@ if __name__ == "__main__":
     position_x = (screen_width - screen_width) // 2
     position_y = (screen_height - screen_height) // 2
     pygame.init()
+    pygame.mixer.init()
+    win_sound = pygame.mixer.Sound('sounds/applause.wav')
+    lose_sound = pygame.mixer.Sound('sounds/gameover.wav')
+    move_sound = pygame.mixer.Sound('sounds/movement.wav')
+    round_sound = pygame.mixer.Sound('sounds/attack_round.wav')
+    
     screen = pygame.display.set_mode((1600, 900))
 
     title_screen = TitleScreen(screen)
@@ -39,8 +44,8 @@ if __name__ == "__main__":
                 screen.blit(fade_surface, (0, 0))  # Blit the fade_surface onto the screen
                 pygame.display.flip()  # Update the display to show the fade effect
                 pygame.time.delay(45)  # Adjust delay for desired speed
-                fade_in_done = True
-                current_state = 'game_loop'
+            fade_in_done = True
+            current_state = 'game_loop'
             pygame.mixer.music.play(-1)
             pygame.mixer.music.set_volume(0.3)
 
@@ -59,6 +64,8 @@ if __name__ == "__main__":
                         game_manager.process_keypress(event)
                 if game_manager.check_for_combat():
                     current_state = 'combat'
+                    pygame.mixer.music.stop()
+                    game_manager.combat.init_music(volume=0.7)
                 game_manager.ui.process_input(events)
 
             if current_state != 'combat':
@@ -66,14 +73,12 @@ if __name__ == "__main__":
                 pygame.display.flip()
 
         elif current_state == 'combat':
-            # Combat logic
             game_manager.combat.update()
             game_manager.update()
-
             events = pygame.event.get()
             game_manager.ui.process_input(events)
-
             if game_manager.combat.is_over:
-                game_manager.ui.room_display.player_inventory_change = True
+                pygame.mixer.music.stop()  # Stop combat music
+                game_manager.combat.resume_regular_music()  # Resume regular music
                 current_state = 'game_loop'
-                
+                        

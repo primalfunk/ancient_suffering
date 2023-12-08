@@ -1,7 +1,9 @@
 from inventory import Inventory
+from sound_manager import SoundManager
 
 class Player:
     def __init__(self, start_room):
+        self.sounds = SoundManager()
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
         self.in_combat = False
@@ -19,7 +21,7 @@ class Player:
         self.inventory = Inventory()
         self.equipped_weapon = None
         self.equipped_armor = None
-
+    
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
         self.current_room = new_room
@@ -38,6 +40,7 @@ class Player:
             self.equipped_armor = item
             self.defn += 30 # or whatever
         self.current_room.decorations.remove(item)
+        self.sounds.play_sound('inventory', 0.75)
 
     def unequip_item(self, item, category):
         if category == "W":
@@ -47,6 +50,7 @@ class Player:
             self.equipped_armor = None
             self.defn -= 30 # or whatever
         self.current_room.decorations.append(item)
+        self.sounds.play_sound('inventory', 0.75)
 
     def check_level_up(self):
         # Example: Increase level for every 25 exp

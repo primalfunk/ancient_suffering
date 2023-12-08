@@ -4,11 +4,13 @@ import logging
 import pygame
 from message_display import MessageDisplay
 from room_display import RoomDisplay
+from sound_manager import SoundManager
 
 class UI: 
     def __init__(self, screen, player, window_width, window_height, game_manager):
         boot_logger = logging.getLogger('boot')
         self.screen = screen
+        self.sounds = SoundManager()
         self.n_button_rect = None
         self.s_button_rect = None
         self.w_button_rect = None
@@ -33,6 +35,8 @@ class UI:
             font=self.custom_font
         )
         self.item_category_map = self.parse_item_categories()
+        self.current_state = None
+
 
     def parse_item_categories(self):
         category_map = {}
@@ -206,25 +210,41 @@ class UI:
                 self.player.current_room.decorations.append(item)
                 self.message_display.add_message(f"You dropped the {item} on the ground.")
                 self.room_display.player_inventory_change = True
-                self.room_display.display_room_info()
+                self.room_display.display_room_info(self.screen)
                 break
 
     def set_middle_button_text(self):
-        self.middle_button_label = ""
-        for item in self.player.current_room.decorations:
-            if self.item_category_map.get(item, '') in {'T', 'W', 'A', 'K'}:
-                self.middle_button_label = "Pick Up"
-                break
+        new_state = None
+        # Check for enemies
         for enemy in self.game_manager.enemy_manager.enemies:
-            if enemy.current_room == self.player.current_room:
-                self.middle_button_label = "Attack"
+            if enemy.current_room == self.game_manager.player.current_room:
+                new_state = "enemy"
                 break
+        # Check for items only if no enemy is found
+        if new_state is None:
+            for item in self.game_manager.player.current_room.decorations:
+                if self.item_category_map.get(item, '') in {'T', 'W', 'A', 'K'}:
+                    new_state = "item"
+                    break
+        # Compare new state with current state
+        if new_state != self.current_state:
+            self.update_button_label_and_sound(new_state)
+            self.current_state = new_state
+
+    def update_button_label_and_sound(self, new_state):
+        if new_state == "enemy":
+            self.middle_button_label = "Attack"
+            self.sounds.play_sound('danger', 0.75)
+        elif new_state == "item":
+            self.middle_button_label = "Pick Up"
+            self.sounds.play_sound('inventory', 0.75)
+        else:
+            self.middle_button_label = ""
 
     def handle_middle_button_click(self):
         if self.middle_button_label == "Attack":
             self.game_manager.is_combat = True
             self.game_manager.combat = Combat(self.player, True, self.game_manager.enemy_manager, self.message_display) # attacker, is_player, enemy_manager, message_system
-            
         if self.middle_button_label == "Pick Up":
             for item in self.player.current_room.decorations:
                 item_category = self.item_category_map.get(item, '')
