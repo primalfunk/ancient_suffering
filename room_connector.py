@@ -124,6 +124,7 @@ class RoomConnector:
                     visited.add(room)  # Mark room as visited
 
         # Check if all rooms are now connected
+        self.remove_unconnected_rooms()
         assert len(visited) == len(self.rooms), "Map is still not fully connected."
 
     def dfs(self, room, visited):
@@ -161,3 +162,9 @@ class RoomConnector:
 
         dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
         self.connector_logger.debug(f"Ending dead end count is {len(dead_end_rooms)}")
+
+    def remove_unconnected_rooms(self):
+        unconnected_rooms = [room_id for room_id, room in self.rooms.items() if not room.connections]
+        for room_id in unconnected_rooms:
+            self.connector_logger.info(f"Removing unconnected room: {room_id}")
+            del self.rooms[room_id]

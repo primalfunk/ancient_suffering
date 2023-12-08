@@ -70,8 +70,12 @@ if __name__ == "__main__":
             game_manager.update()
             events = pygame.event.get()
             game_manager.ui.process_input(events)
+            
             if game_manager.combat.is_over:
                 pygame.mixer.music.stop()
+                game_manager.ui.room_display.update_post_combat(screen)
+                game_manager.combat.is_over = False
+                
                 game_manager.combat.resume_regular_music()
                 current_state = 'game_loop'
                         

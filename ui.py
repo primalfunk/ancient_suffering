@@ -21,7 +21,7 @@ class UI:
         self.inventory_item_rects = []
         self.window_width = window_width
         self.window_height = window_height
-        self.custom_font = pygame.font.Font('customfont.ttf', 26)
+        self.custom_font = pygame.font.Font('customfont.ttf', 22)
         self.last_room_id = None
         self.to_render = []
         self.game_manager = game_manager

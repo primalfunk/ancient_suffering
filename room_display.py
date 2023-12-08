@@ -43,10 +43,14 @@ class RoomDisplay:
         pygame.draw.rect(room_info_surface, border_color, room_info_surface.get_rect(), 1)
         screen.blit(room_info_surface, (0, 0))
 
+    def update_post_combat(self, screen):
+        self.player_inventory_change = True
+        self.display_room_info(screen)
+    
     def update_room_info_text(self):
-        being = ['find yourself in ', 'are in ', 'have reached ', 'have arrived at ', 'are standing in ']
+        being = ['find yourself in ', 'are in ', 'have reached ', 'have arrived at ', 'are standing in ', 'arrive at ', 'step into ']
         room_name = self.player.current_room.name.lower() if self.player.current_room.name else "unknown place"
-        region_name = self.player.current_room.region.replace('_', ' ') if self.player.current_room.region else "unknown region"
+        region_name = self.player.current_room.region.replace('_', ' ') if self.player.current_room.region else "unknown area"
         region_name = region_name.lower()
         items = self.player.current_room.decorations
         region_desc = f"You {random.choice(being)}{self.article_for_word(room_name)}{room_name} in {self.article_for_word(region_name)}{region_name}."

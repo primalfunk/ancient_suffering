@@ -1,4 +1,3 @@
-from combat import Combat
 from enemy_manager import EnemyManager
 import logging
 from map import Map
@@ -51,7 +50,7 @@ class GameManager:
             self.map_visualizer.update_light_levels(visibility_radius=3)
             new_region_name = new_room.region.replace('_', ' ')
             self.sounds.play_sound('travel', 0.5)
-            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_region_name}: {new_room.name.lower()} ({new_room.x}, {new_room.y})")
+            self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.title()} ({new_room.x}, {new_room.y})")
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
 
@@ -75,6 +74,8 @@ class GameManager:
     
     def restart_game(self):
         self.boot_logger.debug("Restarting game...")
+        for room in self.game_map.rooms.values():
+            room.lit = 0 
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room)
         self.player_move_count = 0
@@ -95,7 +96,7 @@ class GameManager:
             direction = 'e'
         elif event.key == pygame.K_SPACE:
             # check the middle button text
-            if self.ui.middle_button_label == "Pick Up":
+            if self.ui.middle_button_label in ("Pick Up", "Attack"):
                 self.ui.handle_middle_button_click()
         elif event.key == pygame.K_q:
             self.sounds.play_sound('gameover', 0.75)
