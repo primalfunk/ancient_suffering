@@ -26,7 +26,7 @@ class UI:
         self.to_render = []
         self.game_manager = game_manager
         self.room_display = RoomDisplay(screen, player, self.custom_font, (window_width, window_height))
-        message_display_height = 300
+        message_display_height = window_height // 2
         self.message_display = MessageDisplay(
             x=0, 
             y=2*self.window_height // 3 - message_display_height, 

@@ -1339,8 +1339,8 @@
         ],
         "tools": [
             "lantern",
-            "backpack",
-            "bedroll"        
+            "lantern",
+            "lantern"        
         ],
         "natural_elements": [
             "flint",

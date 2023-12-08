@@ -1,10 +1,11 @@
 TODOS
-- implement red crystal healing
-- engineer and balance combat
+- test combat for multiple enemies + player
+- implement lantern light expansion, map expansion
 - for room and region names, designate matching collections of regions so each reset has a common theme; enemy types to match
-- start planning the game loop; is map solution taking out all the enemies?
 - add player name input to title screen
 
 BUGS
-- refresh room display immediately after combat (or if anything dies)
-- reset room lit conditions on game reset
+- make sure rooms are cleared of items and enemies on reset; make a whole new map.
+
+FOR LATER
+- implement map clear conditions (take artifact to key room)

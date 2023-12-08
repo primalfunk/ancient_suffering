@@ -1,7 +1,8 @@
 from sound_manager import SoundManager
 
 class Inventory:
-    def __init__(self, max_size=5):
+    def __init__(self, player, max_size=5):
+        self.player = player
         self.sounds = SoundManager()
         self.items = []
         self.max_size = max_size
@@ -11,6 +12,13 @@ class Inventory:
         if len(self.items) < self.max_size:
             self.items.append(item)
             self.sounds.play_sound('inventory', 0.75)
+            # special effect item(s)
+            if item == 'lantern':
+                print(f"picked up lantern")
+                self.player.visibility_radius = 4
+            if item == 'map':
+                print(f"picked up map")
+                self.player.got_map = True
             return True
         else:
             self.full = True
@@ -21,6 +29,8 @@ class Inventory:
         if item in self.items:
             self.items.remove(item)
             self.sounds.play_sound('inventory', 0.75)
+            if item == 'lantern':
+                self.player.visibility_radius = 3
             return True
         else:
             if len(self.items) < self.max_size:

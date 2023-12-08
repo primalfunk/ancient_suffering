@@ -3,10 +3,10 @@ import pygame
 class MessageDisplay:
     def __init__(self, x, y, width, height, font):
         self.messages = []
-        self.max_messages = 100
+        self.max_messages = 1000
         self.x = x
         self.horizontal_pad = 20
-        self.vertical_pad = 20
+        self.vertical_pad = 5
         self.y = y
         self.width = width
         self.height = height
@@ -14,19 +14,14 @@ class MessageDisplay:
         self.scroll_pos = 0
 
     def add_message(self, message):
-        if len(self.messages) >= self.max_messages:
-            self.messages.pop(0)
         self.messages.append(message)
-        total_text_height = len(self.messages) * self.font.get_height()
-        if total_text_height > self.height - self.vertical_pad:
-            self.scroll_pos = max(0, len(self.messages) - (self.height - self.vertical_pad) // self.font.get_height())
-        else:
-            self.scroll_pos = 0
-
-    def handle_scroll(self, scroll_amount):
-        self.scroll_pos += scroll_amount
-        self.scroll_pos = max(0, min(self.scroll_pos, len(self.messages) - 1))
-
+        if len(self.messages) > self.max_messages:
+            self.messages.pop(0)
+        # Adjust scroll_pos for autoscrolling
+        visible_lines = (self.height - self.vertical_pad * 2) // self.font.get_height()
+        total_lines = sum(len(self.wrap_text(msg, self.width - self.horizontal_pad * 2)) for msg in self.messages)
+        self.scroll_pos = max(0, total_lines - visible_lines)
+   
     def render(self, surface):
         surface_area = pygame.Rect(self.x, self.y, self.width, self.height)
         surface.set_clip(surface_area)
@@ -36,13 +31,27 @@ class MessageDisplay:
             for line in wrapped_lines:
                 text_surface = self.font.render(line, True, (255, 255, 255))
                 text_height = text_surface.get_height()
-                if y_offset + text_height <= self.y + self.height:
-                    surface.blit(text_surface, (self.x + self.horizontal_pad, y_offset))
+                surface.blit(text_surface, (self.x + self.horizontal_pad, y_offset))
                 y_offset += text_height
-                if y_offset >= self.y + self.height:
-                    break
         pygame.draw.line(surface, (144, 236, 144), (self.x, self.y), (self.x + self.width, self.y), 2)
+        self.draw_scrollbar(surface)
         surface.set_clip(None)
+
+    def draw_scrollbar(self, surface):
+        scrollbar_width = 10  # Width of the scrollbar
+        scroll_area_height = self.height - 2 * self.vertical_pad
+        scrollbar_x = self.x + self.width - scrollbar_width - self.horizontal_pad
+        # Calculate total content height
+        total_content_height = len(self.messages) * self.font.get_height()
+        # Check to prevent division by zero
+        if total_content_height == 0:
+            return  # No scrollbar needed if there are no messages
+        # Calculate scrollbar height
+        scrollbar_height = min(self.height, max(20, (scroll_area_height ** 2) / total_content_height))
+        # Calculate scrollbar position
+        scrollbar_y = self.y + self.vertical_pad + (self.scroll_pos / len(self.messages)) * (scroll_area_height - scrollbar_height)
+        scrollbar_rect = pygame.Rect(scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height)
+        pygame.draw.rect(surface, (144, 236, 144), scrollbar_rect)
 
     def wrap_text(self, text, max_width):
         words = text.split(' ')
@@ -60,3 +69,8 @@ class MessageDisplay:
     def draw_top_border(surface, rect, color, border_width):
         # Draw only the top border
         pygame.draw.line(surface, color, rect.topleft, rect.topright, border_width)
+
+    def handle_scroll(self, scroll_amount):
+        self.scroll_pos += scroll_amount
+        total_lines = sum(len(self.wrap_text(message, self.width - self.horizontal_pad * 2)) for message in self.messages)
+        self.scroll_pos = max(0, min(self.scroll_pos, total_lines - 1))

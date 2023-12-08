@@ -15,6 +15,7 @@ class MapVisualizer:
         self.dead_ends = [room for room in self.game_map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
         self.explored = set() 
         self.explored.add((player.x, player.y))
+        self.visibility_radius = self.player.visibility_radius
 
     def generate_region_colors(self):
         unique_regions = list(set(room.region for room in self.game_map.rooms.values()))
@@ -36,8 +37,8 @@ class MapVisualizer:
         value = random.uniform(0.6, 0.8)
         return self.hsv_to_rgb(hue, saturation, value)
 
-    def draw_map(self, screen, offset_x = 0):
-        visibility_radius = 3 # default 3, + 2 with torch
+    def draw_map(self, screen, offset_x=0):
+        visibility_radius = self.visibility_radius
         self.update_light_levels(visibility_radius)
         enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemy_manager.enemies}
         for room in self.game_map.rooms.values():
@@ -65,13 +66,6 @@ class MapVisualizer:
                 if connected_room and (connected_room.x, connected_room.y) in self.explored:
                     self.draw_connection(screen, x, y, direction)
             # Draw an asterisk in the room if it has decorations
-            if len(room.decorations) > 0 and room.lit > 0:
-                pass
-                # asterisk_font = pygame.font.Font(None, 12)  # Choose an appropriate font size
-                # symbol = "*"
-                # asterisk_surface = asterisk_font.render(symbol, True, (200, 200, 200))  # White asterisk
-                # asterisk_rect = asterisk_surface.get_rect(center=(x + self.cell_size // 2, y + self.cell_size // 2))
-                # screen.blit(asterisk_surface, asterisk_rect.topleft)
 
     def update_light_levels(self, visibility_radius):
         for dx in range(-visibility_radius, visibility_radius + 1):

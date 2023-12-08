@@ -1,4 +1,5 @@
 from inventory import Inventory
+import random
 from sound_manager import SoundManager
 
 class Player:
@@ -10,21 +11,27 @@ class Player:
         self.name = "PLAYER"
         self.atk = 10 # attack
         self.defn = 10 # defense
-        self.int = 1 # intelligence
-        self.wis = 1 # wisdom
-        self.con = 1 # constitution
-        self.eva = 1 # evasion
+        self.int = 0 # intelligence
+        self.wis = 0 # wisdom
+        self.con = 0 # constitution
+        self.eva = 0 # evasion
         self.exp = 0 # experience
         self.level = 1
+        self.max_hp = 50
         self.hp = 50
-        self.mp = 10
-        self.inventory = Inventory()
+        self.max_mp = 50
+        self.mp = 50
+        self.inventory = Inventory(self)
         self.equipped_weapon = None
         self.equipped_armor = None
+        self.got_map = False
+        self.visibility_radius = 3
     
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
         self.current_room = new_room
+        if self.hp < self.max_hp: # regen feature
+            self.hp += 1
 
     def can_move(self, direction, game_map):
         current_room = game_map.rooms[(self.x, self.y)]
@@ -53,9 +60,31 @@ class Player:
         self.sounds.play_sound('inventory', 0.75)
 
     def check_level_up(self):
-        # Example: Increase level for every 25 exp
-        if self.exp >= 25:
-            self.level += 1
-            self.exp -= 25
-            return True  # if it happened, return True
+        level_up_threshold = self.calculate_level_up_threshold()
+        if self.exp >= level_up_threshold:
+            return True
         return False
+    
+    def calculate_level_up_threshold(self):
+        return 25 * 2 ** (self.level - 1)
+
+    def level_up(self):
+        self.level += 1
+        stat_increases = {
+        'atk': random.randint(2, 5) + 2,
+        'defn': random.randint(2, 5) + 2,
+        'int': random.randint(1, 3) + self.level // 5,
+        'wis': random.randint(1, 3) + self.level // 5,
+        'con': random.randint(1, 3),
+        'eva': random.randint(1, 3),
+        'max_hp': self.con * 2 + self.level,
+        'max_mp': random.randint(1, 3) + self.level // 2}
+
+        for stat, increase in stat_increases.items():
+            setattr(self, stat, getattr(self, stat) + increase)
+
+        self.hp = self.max_hp
+        self.mp = self.max_mp
+
+        self.sounds.play_sound('win', 0.5)
+        return stat_increases

@@ -3,7 +3,7 @@ import pygame
 class SoundManager:
     def __init__(self):
         self.sounds = {
-            "win": pygame.mixer.Sound('sounds/applause.wav'),
+            "win": pygame.mixer.Sound('sounds/bvictory.wav'),
             "arcane": pygame.mixer.Sound('sounds/arcane.wav'),
             "round": pygame.mixer.Sound('sounds/attack_round.wav'),
             "danger": pygame.mixer.Sound('sounds/enemysighted.wav'),
