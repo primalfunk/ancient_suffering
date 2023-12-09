@@ -28,9 +28,10 @@ class GameManager:
         self.screen = screen
         self.fullscreen = True
         start_room = random.choice(list(self.game_map.rooms.values()))
-        self.player = Player(start_room) # instantiate the Player
+        self.player = Player(start_room, self) # instantiate the Player and pass the GM instance
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count) # instantiate the EnemyManager
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player) # instantiate the MapVisualizer
+        self.map_visualizer.update_light_levels(self.player.visibility_radius)
         pygame.display.set_caption("Journey to a Finished Game")
         self.current_state = "title_screen"
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
@@ -47,8 +48,7 @@ class GameManager:
             new_room = self.game_map.rooms[(self.player.x, self.player.y)].connections[direction]
             self.player.move_to_room(new_room)
             self.map_visualizer.explored.add((new_room.x, new_room.y))
-            self.map_visualizer.update_light_levels(visibility_radius=3)
-            new_region_name = new_room.region.replace('_', ' ')
+            self.map_visualizer.update_light_levels(self.player.visibility_radius)
             self.sounds.play_sound('travel', 0.5)
             self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.title()} ({new_room.x}, {new_room.y})")
         else:
@@ -74,13 +74,15 @@ class GameManager:
     
     def restart_game(self):
         self.boot_logger.debug("Restarting game...")
-        for room in self.game_map.rooms.values():
-            room.lit = 0 
+        self.game_map = Map(25)
+        # for room in self.game_map.rooms.values():
+        #     room.lit = 0 
         start_room = random.choice(list(self.game_map.rooms.values()))
-        self.player = Player(start_room)
+        self.player = Player(start_room, self)
         self.player_move_count = 0
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
+        self.map_visualizer.update_light_levels(self.player.visibility_radius)
         self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
         self.boot_logger.debug("Game restarted successfully.")
 

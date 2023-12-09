@@ -1338,9 +1338,13 @@
             "empty pitcher"
         ],
         "tools": [
-            "lantern",
-            "lantern",
-            "lantern"        
+            "torch",
+            "map",
+            "flashlight",
+            "compass",
+            "table lamp",
+            "glowing rock"
+    
         ],
         "natural_elements": [
             "flint",

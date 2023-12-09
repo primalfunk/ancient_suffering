@@ -11,7 +11,8 @@ def setup_logging():
         'map': {'filename': 'map.log', 'level': logging.DEBUG},
         'combat': {'filename': 'combat.log', 'level': logging.INFO},
         'boot': {'filename': 'boot.log', 'level': logging.DEBUG},
-        'connector': {'filename': 'connector.log', 'level': logging.DEBUG}
+        'connector': {'filename': 'connector.log', 'level': logging.DEBUG},
+        'sim': {'filename': 'simulation.log', 'level': logging.DEBUG}
     }
 
     for logger_name, logger_info in loggers.items():
@@ -20,7 +21,7 @@ def setup_logging():
 
 def setup_logger(name, log_file, level=logging.DEBUG):
     handler = logging.FileHandler(log_file, mode='w')
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
     handler.setFormatter(formatter)
 
     logger = logging.getLogger(name)

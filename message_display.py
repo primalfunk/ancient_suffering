@@ -13,7 +13,7 @@ class MessageDisplay:
         self.font = font
         self.scroll_pos = 0
 
-    def add_message(self, message):
+    def add_message(self, message, color=(255, 255, 255)):
         self.messages.append(message)
         if len(self.messages) > self.max_messages:
             self.messages.pop(0)

@@ -1,11 +1,13 @@
 TODOS
+- keep debugging the new combat logic, starting with "hit for 0 damage" condition
+- alter data structure in words.json so we have a randomized list of valid light sources and use it in ObjectDistribution (static "torch" right now)
 - test combat for multiple enemies + player
 - implement lantern light expansion, map expansion
 - for room and region names, designate matching collections of regions so each reset has a common theme; enemy types to match
 - add player name input to title screen
 
 BUGS
-- make sure rooms are cleared of items and enemies on reset; make a whole new map.
+- sometimes enemy names don't show up in the room_display when there's an enemy in the player room
 
 FOR LATER
 - implement map clear conditions (take artifact to key room)

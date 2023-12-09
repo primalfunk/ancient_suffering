@@ -10,7 +10,6 @@ class Room:
         self.has_treasure = False
         self.decorations = []
         self.enemies = []
-        # for a-star pathfinding
         self.parent = None
         self.g = 0
         self.h = 0

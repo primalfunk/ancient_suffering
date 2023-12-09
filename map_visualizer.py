@@ -15,7 +15,7 @@ class MapVisualizer:
         self.dead_ends = [room for room in self.game_map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
         self.explored = set() 
         self.explored.add((player.x, player.y))
-        self.visibility_radius = self.player.visibility_radius
+        self.max_light_level = 5
 
     def generate_region_colors(self):
         unique_regions = list(set(room.region for room in self.game_map.rooms.values()))
@@ -38,8 +38,11 @@ class MapVisualizer:
         return self.hsv_to_rgb(hue, saturation, value)
 
     def draw_map(self, screen, offset_x=0):
-        visibility_radius = self.visibility_radius
-        self.update_light_levels(visibility_radius)
+        if self.player.has_map:
+            for room in self.game_map.rooms.values():
+                room.lit = self.max_light_level
+        elif self.player.visibility_radius_changed:
+            self.update_light_levels(self.player.visibility_radius)
         enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemy_manager.enemies}
         for room in self.game_map.rooms.values():
             x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
@@ -62,22 +65,12 @@ class MapVisualizer:
             else:
                 room_color = (0, 0, 0)
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))
-            for direction, connected_room in room.connections.items():
-                if connected_room and (connected_room.x, connected_room.y) in self.explored:
-                    self.draw_connection(screen, x, y, direction)
-            # Draw an asterisk in the room if it has decorations
+            if self.player.has_compass or room.lit > 0:
+                for direction, connected_room in room.connections.items():
+                    if connected_room and (connected_room.x, connected_room.y) in self.explored:
+                        self.draw_connection(screen, x, y, direction, room_color)
 
-    def update_light_levels(self, visibility_radius):
-        for dx in range(-visibility_radius, visibility_radius + 1):
-            for dy in range(-visibility_radius, visibility_radius + 1):
-                distance = self.calculate_distance(0, 0, dx, dy)
-                if distance <= visibility_radius:
-                    room = self.game_map.rooms.get((self.player.x + dx, self.player.y + dy))
-                    if room:
-                        light_level = visibility_radius - int(distance)
-                        room.lit = max(room.lit, light_level)
-
-    def draw_connection(self, screen, x, y, direction):
+    def draw_connection(self, screen, x, y, direction, color):
         # Factor to control the size of the connection
         connection_dimension = self.cell_size * 0.5
 
@@ -90,7 +83,7 @@ class MapVisualizer:
         elif direction == 'n':  # North
             connection_rect = (x + self.cell_size / 2 - connection_dimension / 2, y - self.connection_size, connection_dimension, self.connection_size)
 
-        pygame.draw.rect(screen, (140, 140, 140), connection_rect)
+        pygame.draw.rect(screen, color, connection_rect)
     
     def draw_connectionless_edges(self, screen, room, x, y):
         border_color = (30, 30, 30)  # Dark color
@@ -118,7 +111,18 @@ class MapVisualizer:
                         light_level = visibility_radius - int(distance)
                         room.lit = max(room.lit, light_level)
     
-    def get_color_intensity(self, base_color, light_level):
-        factor = light_level / 3  # Assuming 3 is the max light level
-        adjusted_color = tuple(int(c * factor) for c in base_color)
+    def get_color_intensity(self, base_color, light_level, max_light_level=5):
+        factor = light_level / max_light_level  # Normalizes the light level
+        adjusted_color = tuple(min(int(c * factor), 255) for c in base_color)
         return adjusted_color
+        
+    def update_light_levels(self, visibility_radius):
+        visibility_radius
+        for dx in range(-visibility_radius, visibility_radius + 1):
+            for dy in range(-visibility_radius, visibility_radius + 1):
+                distance = self.calculate_distance(0, 0, dx, dy)
+                if distance <= visibility_radius:
+                    room = self.game_map.rooms.get((self.player.x + dx, self.player.y + dy))
+                    if room:
+                        light_level = visibility_radius - int(distance)
+                        room.lit = max(room.lit, light_level)

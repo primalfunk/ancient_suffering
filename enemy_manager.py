@@ -6,7 +6,7 @@ class EnemyManager:
         self.game_map = game_map
         self.player = player
         self.enemies = []
-        self.spawn_enemies(10)
+        self.spawn_enemies(10, self.player.level)
         self.player_move_count = player_move_count
 
     def check_chase_player(self):
@@ -15,13 +15,14 @@ class EnemyManager:
                 # switch the enemy's flag to following
                 enemy.is_following_player = True
 
-    def spawn_enemies(self, count):
-        for num in range(count):  # Spawn count enemies
+    def spawn_enemies(self, count, player_level):
+        for num in range(count):
             while True:
                 potential_start = random.choice(list(self.game_map.rooms.values()))
                 if self.is_valid_spawn(potential_start):
-                    enemy = Enemy(potential_start)
-                    enemy.name = "Enemy " + str(num)
+                    enemy_level = random.randint(max(player_level - 4, 1), player_level + 4)
+                    enemy = Enemy(potential_start, enemy_level)
+                    enemy.name = f"Level {enemy_level} Enemy No. {num}"
                     self.enemies.append(enemy)
                     break
 
@@ -69,7 +70,6 @@ class EnemyManager:
                 enemy.move_to_room(next_room)
                 next_room.enemy = enemy
         else:
-            # Random movement logic if the enemy is not in the same room as the player
             if enemy.current_room != self.player.current_room:
                 valid_directions = [dir for dir in ['n', 's', 'e', 'w'] if enemy.can_move(dir, self.game_map)]
                 direction = random.choice(valid_directions) if valid_directions else None
