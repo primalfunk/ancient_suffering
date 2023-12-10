@@ -14,22 +14,25 @@ class MessageDisplay:
         self.scroll_pos = 0
 
     def add_message(self, message, color=(255, 255, 255)):
+        # Convert message to tuple if it's not already one
+        if not isinstance(message, tuple):
+            message = (message, color)
+        
         self.messages.append(message)
         if len(self.messages) > self.max_messages:
             self.messages.pop(0)
-        # Adjust scroll_pos for autoscrolling
         visible_lines = (self.height - self.vertical_pad * 2) // self.font.get_height()
-        total_lines = sum(len(self.wrap_text(msg, self.width - self.horizontal_pad * 2)) for msg in self.messages)
+        total_lines = sum(len(self.wrap_text(msg, self.width - self.horizontal_pad * 2)) for msg, _ in self.messages)
         self.scroll_pos = max(0, total_lines - visible_lines)
    
     def render(self, surface):
         surface_area = pygame.Rect(self.x, self.y, self.width, self.height)
         surface.set_clip(surface_area)
         y_offset = self.y + self.vertical_pad - self.scroll_pos * self.font.get_height()
-        for message in self.messages:
+        for message, color in self.messages:
             wrapped_lines = self.wrap_text(message, self.width - self.horizontal_pad * 2)
             for line in wrapped_lines:
-                text_surface = self.font.render(line, True, (255, 255, 255))
+                text_surface = self.font.render(line, True, color)
                 text_height = text_surface.get_height()
                 surface.blit(text_surface, (self.x + self.horizontal_pad, y_offset))
                 y_offset += text_height
@@ -53,17 +56,24 @@ class MessageDisplay:
         scrollbar_rect = pygame.Rect(scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height)
         pygame.draw.rect(surface, (144, 236, 144), scrollbar_rect)
 
-    def wrap_text(self, text, max_width):
+    def wrap_text(self, text_tuple, max_width):
+        # Unpack the text only if it's a tuple
+        text = text_tuple[0] if isinstance(text_tuple, tuple) else text_tuple
+        
         words = text.split(' ')
         lines = []
-        current_line = ''
+        current_line = []
         for word in words:
-            if self.font.size(current_line + word)[0] <= max_width:
-                current_line += word + ' '
+            # Build a line with words until it exceeds max_width
+            line_test = ' '.join(current_line + [word])
+            line_width, _ = self.font.size(line_test)
+            if line_width <= max_width:
+                current_line.append(word)
             else:
-                lines.append(current_line)
-                current_line = word + ' '
-        lines.append(current_line)
+                lines.append(' '.join(current_line))
+                current_line = [word]
+        if current_line:
+            lines.append(' '.join(current_line))
         return lines
 
     def draw_top_border(surface, rect, color, border_width):

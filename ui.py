@@ -8,7 +8,6 @@ from sound_manager import SoundManager
 
 class UI: 
     def __init__(self, screen, player, window_width, window_height, game_manager):
-        boot_logger = logging.getLogger('boot')
         self.screen = screen
         self.sounds = SoundManager()
         self.n_button_rect = None

@@ -9,17 +9,14 @@ from sound_manager import SoundManager
 from ui import UI
 
 class GameManager:
-    def __init__(self, screen):
+    def __init__(self, screen, width, height):
         self.boot_logger = logging.getLogger('boot')
         self.game_map = Map(25) # instantiate the Map
-        cell_size = 25
-        connection_size = cell_size // 3
-        padding = 2
-        window_size = self.game_map.size * cell_size + (self.game_map.size - 1) * connection_size + padding * 2
-        self.window_width = window_size
-        self.window_height = window_size + 160
-        self.window_width *= 2
-        self.screen = pygame.display.set_mode([self.window_width, self.window_height])
+        self.screen = screen
+        self.width = width
+        self.height = height
+        self.screen_width = width
+        self.screen_height = height
         self.combat = None
         self.staggered_enemies = False
         self.player_move_count = 0
@@ -34,7 +31,7 @@ class GameManager:
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
         pygame.display.set_caption("Journey to a Finished Game")
         self.current_state = "title_screen"
-        self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
+        self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
         self.sounds = SoundManager()
 
     def move_player(self, direction):
@@ -59,8 +56,10 @@ class GameManager:
         self.screen.fill((0, 0, 0))
         self.ui.room_display.display_room_info(self.screen)
         self.ui.update_ui()
-        half_window_width = self.window_width // 2
-        self.map_visualizer.draw_map(self.screen, offset_x=half_window_width)
+        map_area_width = self.screen_width // 2
+        map_area_height = int(self.screen_height * 0.8)
+        map_area_x = self.screen_width // 2
+        self.map_visualizer.draw_map(self.screen, offset_x=map_area_x, width=map_area_width, height=map_area_height)
         self.check_for_combat()
         pygame.display.flip()
 
@@ -83,7 +82,7 @@ class GameManager:
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
-        self.ui = UI(self.screen, self.player, self.window_width, self.window_height, self)
+        self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
         self.boot_logger.debug("Game restarted successfully.")
 
     def process_keypress(self, event):
@@ -112,28 +111,30 @@ class GameManager:
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
         if self.fullscreen:
-            pygame.display.set_mode((self.window_width, self.window_height), pygame.FULLSCREEN)
+            pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         else:
-            pygame.display.set_mode((self.window_width, self.window_height))
+            pygame.display.set_mode((self.screen_width, self.screen_height))
 
     def draw_initial_ui_onto_surface(self, surface):
         # Draw the room information onto fade_surface
         self.ui.room_display.display_room_info(surface)
         self.ui.render_player_stats(surface)
         # Draw the lower part of the UI onto fade_surface
-        lower_ui_surface = pygame.Surface((self.window_width // 2, self.window_height // 4))
+        lower_ui_surface = pygame.Surface((self.screen_width // 2, self.screen_height // 4))
         lower_ui_surface.fill((0, 0, 0))
         padding = 10
         self.ui.render_middle_button_and_inventory_frame(lower_ui_surface, padding)
         self.ui.render_direction_buttons(lower_ui_surface, padding)
         border_color = (144, 238, 144)
         pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
-        surface.blit(lower_ui_surface, (0, self.window_height * 3 // 4))
+        surface.blit(lower_ui_surface, (0, self.screen_height * 3 // 4))
         # Draw player stats and message display onto fade_surface
         self.ui.message_display.render(surface)
         # Draw the map onto fade_surface
-        half_window_width = self.window_width // 2
-        self.map_visualizer.draw_map(surface, offset_x=half_window_width)
+        map_area_width = self.screen_width // 2
+        map_area_height = int(self.screen_height * 0.8)
+        map_area_x = self.screen_width // 2
+        self.map_visualizer.draw_map(surface, offset_x=map_area_x, width=map_area_width, height=map_area_height)
 
     def check_for_combat(self):
         self.is_combat = self.player.in_combat

@@ -2,44 +2,37 @@ import random
 
 class Enemy:
     def __init__(self, start_room, level):
-        self.name = "" # generated when spawned
-        self.exp = 30
+        self.name = ""
+        self.xp_reward = 30 # default
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
         self.speed = 2
         self.current_room.enemies.append(self)
-        self.in_combat = False
-        self.level = max(level, 1)  # Ensure level is at least 1
-        self.atk = 10
-        self.defn = 10
-        self.int = 10
-        self.wis = 10
-        self.con = 10
-        self.eva = 10
-        self.max_hp = 50
-        self.max_mp = 10
+        self.level = max(level, 1)
+        self.max_hp = 30
         self.hp = self.max_hp
-        self.mp = self.max_mp
-        self.stats = {"level": self.level, "atk": self.atk, "defn": self.defn, "int": self.int, "wis": self.wis, "con": self.con, "eva": self.eva, "max_hp": self.max_hp}
         self.aggro = False
-        self.is_following_player = False
-        self.aggro = False
+        self.in_combat = False
         self.is_following_player = False
         self.initialize_stats_based_on_level()
         
     def initialize_stats_based_on_level(self):
-        for _ in range(1, self.level):
-            self.atk += round(random.randint(2, 6))  # Reduced from 5-10
-            self.defn += round(random.randint(1, 3))  # Reduced from 2-4
-            self.int += round(random.randint(2, 6))  # Reduced from 5-10
-            self.wis += round(random.randint(1, 3))  # Reduced from 2-5
-            self.con += round(random.randint(2, 7))  # Reduced from 5-13
-            self.eva += round(random.randint(1, 3))  # Reduced from 2-5
-            self.max_hp += round((self.con * random.randint(1, 2)))  # Reduced multiplier
-            self.max_mp += round(random.randint(1, 2))  # Reduced from 1-3
+        self.atk = 10
+        self.defn = 10
+        self.int = 1
+        self.wis = 1
+        self.con = 1
+        self.eva = 1
+        self.exp = 30
+        self.hp = 50
+        self.mp = 10
+        self.max_hp = 50
+        self.max_mp = 10
+        for level in range(1, self.level):
+            self.atk += max(1, level + random.randint(0, 2))
+            self.defn += max(1, level + random.randint(0, 2))
+            self.max_hp += (2 * level) + random.randint(0, 2)
         self.hp = self.max_hp
-        self.mp = self.max_mp
-        self.stats = {"level": self.level, "atk": self.atk, "defn": self.defn, "int": self.int, "wis": self.wis, "con": self.con, "eva": self.eva, "max_hp": self.max_hp}
         
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y

@@ -1,37 +1,34 @@
 import logging_config
 import pygame
-import tkinter as tk
 from title_screen import TitleScreen
 from game_manager import GameManager
 
 if __name__ == "__main__":
     logging_config.setup_logging()
-    root = tk.Tk()
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    position_x = (screen_width - screen_width) // 2
-    position_y = (screen_height - screen_height) // 2
     pygame.init()
     pygame.mixer.init()
-    screen = pygame.display.set_mode((1600, 900))
-
-    title_screen = TitleScreen(screen)
-    game_manager = GameManager(screen)
+    pygame.display.init()
+    screen_info = pygame.display.Info()
+    screen_width, screen_height = screen_info.current_w, screen_info.current_h
+    print(f"{screen_width}, {screen_height}")
+    screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+    title_screen = TitleScreen(screen, screen_width, screen_height)
+    game_manager = GameManager(screen, screen_width, screen_height)
     fade_in_done = False
-
-    # Main game loop
     title_screen.init_music(0.75)
     current_state = game_manager.current_state
+
     while True:
         if current_state == "title_screen":
             title_screen.update()
-            if title_screen.is_finished():
+            if title_screen.is_finished:
+                game_manager.player.name = title_screen.player_name
                 current_state = "fade_in"
 
         elif current_state == "fade_in" and not fade_in_done:
-            fade_surface = pygame.Surface((game_manager.window_width, game_manager.window_height))
-            fade_surface.fill((0, 0, 0)) # black
-            for a in range(255, -1, -5): # fade in by lowering the opacity of the overlaying surface
+            fade_surface = pygame.Surface((game_manager.screen_width, game_manager.screen_height))
+            fade_surface.fill((0, 0, 0))
+            for a in range(255, -1, -5):
                 game_manager.draw_initial_ui_onto_surface(screen)
                 fade_surface.set_alpha(a)
                 screen.blit(fade_surface, (0, 0))

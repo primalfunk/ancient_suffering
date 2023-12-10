@@ -20,7 +20,7 @@ class EnemyManager:
             while True:
                 potential_start = random.choice(list(self.game_map.rooms.values()))
                 if self.is_valid_spawn(potential_start):
-                    enemy_level = random.randint(max(player_level - 4, 1), player_level + 4)
+                    enemy_level = random.randint(max(player_level - 1, 1), player_level + 1)
                     enemy = Enemy(potential_start, enemy_level)
                     enemy.name = f"Level {enemy_level} Enemy No. {num}"
                     self.enemies.append(enemy)
@@ -29,7 +29,7 @@ class EnemyManager:
     def is_valid_spawn(self, start_room):
         # Check distance from player and other enemies
         for other in [self.player] + self.enemies:
-            if abs(start_room.x - other.x) <= 5 and abs(start_room.y - other.y) <= 5:
+            if abs(start_room.x - other.x) <= 4 and abs(start_room.y - other.y) <= 4:
                 return False
         return True
     

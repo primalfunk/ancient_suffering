@@ -7,10 +7,10 @@ class MapVisualizer:
         self.game_manager = game_manager
         self.game_map = game_map
         self.player = player
-        self.cell_size = 25  # Size of each cell
-        self.border_width = 2  # Width of the border around each room
-        self.connection_size = self.cell_size // 3  # Size of the connections
-        self.padding = 2  # Padding around the map
+        self.cell_size = 25
+        self.border_width = 2
+        self.connection_size = self.cell_size // 3
+        self.padding = 2
         self.region_color_mapping, self.region_colors = self.generate_region_colors()
         self.dead_ends = [room for room in self.game_map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
         self.explored = set() 
@@ -37,7 +37,7 @@ class MapVisualizer:
         value = random.uniform(0.6, 0.8)
         return self.hsv_to_rgb(hue, saturation, value)
 
-    def draw_map(self, screen, offset_x=0):
+    def draw_map(self, screen, offset_x, width, height):
         if self.player.has_map:
             for room in self.game_map.rooms.values():
                 room.lit = self.max_light_level
