@@ -31,6 +31,7 @@ class GameManager:
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
         pygame.display.set_caption("Journey to a Finished Game")
         self.current_state = "title_screen"
+        self.light_change = False
         self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
         self.sounds = SoundManager()
 

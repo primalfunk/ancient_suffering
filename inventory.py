@@ -24,8 +24,6 @@ class Inventory:
 
             if light_source_changed:
                 self.game_manager.map_visualizer.update_light_levels(self.player.visibility_radius)
-                self.game_manager.map_visualizer.draw_map(self.game_manager.screen)
-
 
     def remove_item(self, item):
         if item in self.items:

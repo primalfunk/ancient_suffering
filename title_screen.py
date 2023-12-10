@@ -98,11 +98,7 @@ class TitleScreen:
             pygame.display.flip()
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN:
-            print(f"Keydown event noticed {event.type}. Inputbox status is {self.active}")
-        
         if event.type == pygame.KEYDOWN and self.active:
-            print(f"Key pressed: {event.key}") 
             if event.key == pygame.K_RETURN:
                 self.process_start_game()
                 return

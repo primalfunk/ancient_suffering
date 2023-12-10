@@ -21,8 +21,6 @@ if __name__ == "__main__":
         events = pygame.event.get()
         if current_state == "title_screen":
             for event in events:
-                if event.type == pygame.KEYDOWN:
-                    print(f"Keydown event detected in main loop, sent to title_screen to handle")
                 title_screen.handle_event(event)
                 
             title_screen.update()
