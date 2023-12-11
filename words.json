@@ -1343,8 +1343,13 @@
             "flashlight",
             "compass",
             "table lamp",
-            "glowing rock"
-    
+            "glowing rock",
+            "compass",
+            "compass",
+            "compass",
+            "compass",
+            "map",
+            "map"
         ],
         "natural_elements": [
             "flint",
@@ -1363,11 +1368,11 @@
             "chopped firewood"
         ],
         "artifacts": [
-            "amulet",
-            "statue",
-            "scroll",
-            "gemstone",
-            "relic"
+            "reality amulet",
+            "reality statue",
+            "reality scroll",
+            "reality gemstone",
+            "reality relic"
         ],
         "wildlife": [
             "bird",

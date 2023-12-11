@@ -3,6 +3,7 @@ import json
 import logging
 import pygame
 from message_display import MessageDisplay
+import random
 from room_display import RoomDisplay
 from sound_manager import SoundManager
 
@@ -20,7 +21,7 @@ class UI:
         self.inventory_item_rects = []
         self.window_width = window_width
         self.window_height = window_height
-        self.custom_font = pygame.font.Font('customfont.ttf', 22)
+        self.custom_font = pygame.font.Font('fonts/messages.ttf', 22)
         self.last_room_id = None
         self.to_render = []
         self.game_manager = game_manager
@@ -37,12 +38,32 @@ class UI:
         )
         self.item_category_map = self.parse_item_categories()
         self.current_state = None
+        self.show_intro_message()
+
+    def get_random_color(self):
+            r = random.randint(0, 120)
+            g = random.randint(0, 120)
+            b = random.randint(0, 120)
+            random_color = (r, g, b)
+            return random_color
+
+    def show_intro_message(self):
+        self.message_display.add_message('You have been transported into the Chaos dimension by the Lords of Chaos!', self.get_random_color())
+        self.message_display.add_message("")
+        self.message_display.add_message('In this realm, everything is familiar, but nothing makes sense. Your only hope of escape is to find the artifact of your reality - wherever it may be hidden in this twisted land.', self.get_random_color())
+        self.message_display.add_message('')
+        self.message_display.add_message("")
+        self.message_display.add_message("Move between areas with the keyboard direction arrows, or clicking the buttons below. You can restart or quit at any time by pressing 'q' or 'r' on your keyboard.", self.get_random_color())
+        self.message_display.add_message("")
+        self.message_display.add_message("Go forth, and good luck - may the Lords of Chaos have mercy on you.", (0, 0, 0))
+        self.message_display.add_message("")
+        self.message_display.add_message("--------The Chaos Realm---------")
 
     def draw_hp_bar(self):
         surface_height = self.window_height * 3 // 4 - self.message_display_bottom
         surface_width = self.window_width // 2
         surface = pygame.Surface((surface_width, surface_height))
-        reduced_font = pygame.font.Font('customfont.ttf', 18)
+        reduced_font = pygame.font.Font('fonts/messages.ttf', 18)
 
         def draw_bar(hp, max_hp, y, color, label):
             text = reduced_font.render(label, True, (255, 255, 255))
@@ -94,13 +115,12 @@ class UI:
 
     def render_player_stats(self, screen):
         stats_height = self.window_height // 8
-        custom_font = pygame.font.Font('customfont.ttf', 20)
+        custom_font = pygame.font.Font('fonts/messages.ttf', 18)
         stats_surface = pygame.Surface((self.window_width // 2, stats_height))
         stats_surface.fill((50, 50, 50))
-
         first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
         second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'eva']
-        third_column_attributes = ['region', 'name', 'x', 'y']
+        third_column_attributes = ['region', 'name', 'x', 'perc_lit']
         quarter_width = (self.window_width // 2) // 4
         offsets = [quarter_width * (i + 1) - (quarter_width // 2) for i in range(4)]
         text_color = (144, 236, 144)  # Consistent text color
@@ -127,9 +147,13 @@ class UI:
             if attr in ['region', 'name']:
                 room_attrs = f"{getattr(self.player.current_room, attr, 'N/A')}".title()
                 return room_attrs.replace('_', ' ')
-            else:
-                player_attrs = f"{getattr(self.player, attr, 'N/A')}".title()
-                return player_attrs.replace('_', ' ')
+            elif attr in ['x']:
+                player_attr_x = getattr(self.player.current_room, attr, 'N/A')
+                player_attr_y = getattr(self.player.current_room, 'y', 'N/A')
+                return f"Coords: ({player_attr_x}, {player_attr_y})"
+            else: # attr == perc_lit
+                perc_lit = self.game_manager.map_visualizer.calculate_percent_lit()
+                return f"Map Lit %: {perc_lit:.2f}"
 
         render_text_for_column(third_column_attributes, offsets[2], get_third_column_text)
 
@@ -193,7 +217,7 @@ class UI:
         black_color = (0, 0, 0)
         buttons = {'N': self.n_button_rect, 'S': self.s_button_rect, 'W': self.w_button_rect, 'E': self.e_button_rect}
         for label, rect in buttons.items():
-            pygame.draw.rect(surface, (200, 200, 200), rect)
+            pygame.draw.rect(surface, (144, 236, 144), rect)
             label_surface = self.custom_font.render(label, True, black_color)
             surface.blit(label_surface, (rect.centerx - label_surface.get_width() // 2, rect.centery - label_surface.get_height() // 2))
 
@@ -270,37 +294,39 @@ class UI:
     def handle_middle_button_click(self):
         if self.middle_button_label == "Attack":
             self.game_manager.is_combat = True
-            self.game_manager.combat = Combat(self.player, True, self.game_manager.enemy_manager, self.message_display) # attacker, is_player, enemy_manager, message_system
+            self.game_manager.combat = Combat(self.player, True, self.game_manager.enemy_manager, self.message_display)
+        
         if self.middle_button_label == "Pick Up":
             for item in self.player.current_room.decorations:
                 item_category = self.item_category_map.get(item, '')
-                if item_category in {'T', 'K'}:
-                    if self.player.inventory.add_item(item):
-                        self.player.current_room.decorations.remove(item)
+                if not self.player.inventory.full:
+                    if item_category in {'T', 'K'}:
+                        if self.player.inventory.add_item(item): # attempts to add the item to inventory
+                            self.player.current_room.decorations.remove(item) # remove from room
+                            self.room_display.player_inventory_change = True # signal the inventory change so it can be redrawn
+                            self.message_display.add_message(f"You picked up the {item}.")
+                    if item_category in {'W'} and self.player.equipped_weapon is None:
                         self.room_display.player_inventory_change = True
-                        self.message_display.add_message(f"You picked up the {item}.")
-                    else:
-                        self.message_display.add_message(f"Unable to pick up {item}. Your inventory is full.")
-                if item_category in {'W'} and self.player.equipped_weapon is None:
-                    self.room_display.player_inventory_change = True
-                    self.player.equip_item(item, item_category)
-                    self.message_display.add_message(f"You equipped the {item}.")
-                elif item_category in {'A'} and self.player.equipped_armor is None:
-                    self.room_display.player_inventory_change = True
-                    self.player.equip_item(item, item_category)
-                    self.message_display.add_message(f"You equipped the {item}.")
-                elif item_category in {'W'} and self.player.equipped_weapon is not None:
-                    self.room_display.player_inventory_change = True
-                    self.message_display.add_message(f"You dropped the {self.player.equipped_weapon}.")
-                    self.player.unequip_item(self.player.equipped_weapon, item_category)
-                    self.player.equip_item(item, item_category)
-                    self.message_display.add_message(f"You equipped the {item}.")
-                elif item_category in {'A'} and self.player.equipped_armor is not None:
-                    self.room_display.player_inventory_change = True
-                    self.message_display.add_message(f"You dropped the {self.player.equipped_armor}.")
-                    self.player.unequip_item(self.player.equipped_armor, item_category)
-                    self.message_display.add_message(f"You equipped the {item}.")
-                    self.player.equip_item(item, item_category)
-                
-                self.room_display.display_room_info(self.screen)
+                        self.player.equip_item(item, item_category)
+                        self.message_display.add_message(f"You equipped the {item}.")
+                    elif item_category in {'A'} and self.player.equipped_armor is None:
+                        self.room_display.player_inventory_change = True
+                        self.player.equip_item(item, item_category)
+                        self.message_display.add_message(f"You equipped the {item}.")
+                    elif item_category in {'W'} and self.player.equipped_weapon is not None:
+                        self.room_display.player_inventory_change = True
+                        self.message_display.add_message(f"You dropped the {self.player.equipped_weapon}.")
+                        self.player.unequip_item(self.player.equipped_weapon, item_category)
+                        self.player.equip_item(item, item_category)
+                        self.message_display.add_message(f"You equipped the {item}.")
+                    elif item_category in {'A'} and self.player.equipped_armor is not None:
+                        self.room_display.player_inventory_change = True
+                        self.message_display.add_message(f"You dropped the {self.player.equipped_armor}.")
+                        self.player.unequip_item(self.player.equipped_armor, item_category)
+                        self.message_display.add_message(f"You equipped the {item}.")
+                        self.player.equip_item(item, item_category)
+                    self.room_display.display_room_info(self.screen)
+                else:
+                    self.message_display.add_message(f"Your inventory is full.")
                 break
+                

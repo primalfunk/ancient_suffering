@@ -32,8 +32,6 @@ class Player:
         self.mp = 10
         self.max_hp = 50
         self.max_mp = 10
-
-        # Adjust stats based on level
         for _ in range(1, self.level):
             self.atk += random.randint(2, 5) + 2
             self.defn += random.randint(2, 5) + 2
@@ -43,15 +41,13 @@ class Player:
             self.eva += random.randint(1, 3)
             self.max_hp += self.con * 2 + self.level
             self.max_mp += random.randint(1, 3) + self.level // 2
-
-        # Reset current HP/MP to max values
         self.hp = self.max_hp
         self.mp = self.max_mp
     
     def move_to_room(self, new_room):
         self.x, self.y = new_room.x, new_room.y
         self.current_room = new_room
-        if self.hp < self.max_hp: # regen feature
+        if self.hp < self.max_hp:
             self.hp += 1
 
     def can_move(self, direction, game_map):
@@ -61,6 +57,7 @@ class Player:
         return False
     
     def equip_item(self, item, category):
+        # expansion here and in the data to take a unique value for a piece of equipment
         if category == 'W':
             self.equipped_weapon = item
             self.atk += 10 # or whatever
@@ -103,9 +100,7 @@ class Player:
 
         for stat, increase in stat_increases.items():
             setattr(self, stat, getattr(self, stat) + increase)
-
+        
         self.hp = self.max_hp
         self.mp = self.max_mp
-
-        self.sounds.play_sound('win', 0.5)
         return stat_increases

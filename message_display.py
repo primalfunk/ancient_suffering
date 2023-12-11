@@ -14,7 +14,6 @@ class MessageDisplay:
         self.scroll_pos = 0
 
     def add_message(self, message, color=(0, 0, 0)):
-        # Convert message to tuple if it's not already one
         if not isinstance(message, tuple):
             message = (message, color)
         
@@ -47,27 +46,20 @@ class MessageDisplay:
         scrollbar_width = 10  # Width of the scrollbar
         scroll_area_height = self.height - 2 * self.vertical_pad
         scrollbar_x = self.x + self.width - scrollbar_width - self.horizontal_pad
-        # Calculate total content height
         total_content_height = len(self.messages) * self.font.get_height()
-        # Check to prevent division by zero
         if total_content_height == 0:
             return  # No scrollbar needed if there are no messages
-        # Calculate scrollbar height
         scrollbar_height = min(self.height, max(20, (scroll_area_height ** 2) / total_content_height))
-        # Calculate scrollbar position
         scrollbar_y = self.y + self.vertical_pad + (self.scroll_pos / len(self.messages)) * (scroll_area_height - scrollbar_height)
         scrollbar_rect = pygame.Rect(scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height)
         pygame.draw.rect(surface, (144, 236, 144), scrollbar_rect)
 
     def wrap_text(self, text_tuple, max_width):
-        # Unpack the text only if it's a tuple
         text = text_tuple[0] if isinstance(text_tuple, tuple) else text_tuple
-        
         words = text.split(' ')
         lines = []
         current_line = []
         for word in words:
-            # Build a line with words until it exceeds max_width
             line_test = ' '.join(current_line + [word])
             line_width, _ = self.font.size(line_test)
             if line_width <= max_width:
@@ -80,7 +72,6 @@ class MessageDisplay:
         return lines
 
     def draw_top_border(surface, rect, color, border_width):
-        # Draw only the top border
         pygame.draw.line(surface, color, rect.topleft, rect.topright, border_width)
 
     def handle_scroll(self, scroll_amount):

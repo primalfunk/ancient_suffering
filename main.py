@@ -2,6 +2,7 @@ import logging_config
 import pygame
 from title_screen import TitleScreen
 from game_manager import GameManager
+from sound_manager import SoundManager
 
 
 if __name__ == "__main__":
@@ -9,6 +10,7 @@ if __name__ == "__main__":
     pygame.init()
     pygame.mixer.init()
     pygame.display.init()
+    sounds = SoundManager()
     screen_info = pygame.display.Info()
     screen_width, screen_height = screen_info.current_w, screen_info.current_h
     screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -24,9 +26,11 @@ if __name__ == "__main__":
                 title_screen.handle_event(event)
             title_screen.update()
             if title_screen.is_finished:
+                sounds.play_sound('inventory', 0.8)
                 pygame.mixer.music.stop()
                 game_manager.player.name = title_screen.player_name
                 current_state = "fade_in"
+
         elif current_state == "fade_in" and not fade_in_done:
             fade_surface = pygame.Surface((screen_width, screen_height))
             fade_surface.fill((0, 0, 0))
@@ -40,6 +44,7 @@ if __name__ == "__main__":
             current_state = 'game_loop'
             pygame.mixer.music.play(-1)
             pygame.mixer.music.set_volume(0.3)
+
         elif current_state == 'game_loop':
             for event in events:
                 if event.type == pygame.QUIT:
@@ -59,6 +64,7 @@ if __name__ == "__main__":
                 current_state = 'combat'
                 pygame.mixer.music.stop()
                 game_manager.combat.init_music(volume=0.7)
+
         elif current_state == 'combat':
             game_manager.combat.update()
             game_manager.update()

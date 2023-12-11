@@ -13,10 +13,21 @@ class Map:
         MapElaborator(self, 'words.json')
 
     def generate_map(self):
-        self.populate_grid()
-        self.irregularize_outline()
-        self.visualize_map()
-        self.room_connector = RoomConnector(self)
+        attempt = 0
+        max_attempts = 10
+        while attempt < max_attempts:
+            try:
+                self.populate_grid()
+                self.irregularize_outline()
+                self.visualize_map()
+                self.room_connector = RoomConnector(self)
+                break  # Exit loop if no assertion error
+            except AssertionError:
+                self.map_logger.error(f"Map generation failed on attempt {attempt + 1}. Retrying...")
+                self.rooms.clear()  # Clear the current map
+                attempt += 1
+        if attempt == max_attempts:
+            raise RuntimeError("Failed to generate a valid map after maximum attempts.")
 
     def create_room(self, pos):
         room_id = len(self.rooms) + 1

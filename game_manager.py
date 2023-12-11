@@ -11,7 +11,7 @@ from ui import UI
 class GameManager:
     def __init__(self, screen, width, height):
         self.boot_logger = logging.getLogger('boot')
-        self.game_map = Map(25) # instantiate the Map
+        self.game_map = Map(35)
         self.screen = screen
         self.width = width
         self.height = height
@@ -25,11 +25,11 @@ class GameManager:
         self.screen = screen
         self.fullscreen = True
         start_room = random.choice(list(self.game_map.rooms.values()))
-        self.player = Player(start_room, self) # instantiate the Player and pass the GM instance
-        self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count) # instantiate the EnemyManager
-        self.map_visualizer = MapVisualizer(self, self.game_map, self.player) # instantiate the MapVisualizer
+        self.player = Player(start_room, self)
+        self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.screen_width)
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
-        pygame.display.set_caption("Journey to a Finished Game")
+        pygame.display.set_caption("The Lords of Chaos")
         self.current_state = "title_screen"
         self.light_change = False
         self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
@@ -58,7 +58,7 @@ class GameManager:
         self.ui.room_display.display_room_info(self.screen)
         self.ui.update_ui()
         map_area_width = self.screen_width // 2
-        map_area_height = int(self.screen_height * 0.8)
+        map_area_height = int(self.screen_height * 0.75)
         map_area_x = self.screen_width // 2
         self.map_visualizer.draw_map(self.screen, offset_x=map_area_x, width=map_area_width, height=map_area_height)
         self.check_for_combat()
@@ -75,8 +75,8 @@ class GameManager:
     def restart_game(self):
         self.boot_logger.debug("Restarting game...")
         self.game_map = Map(25)
-        # for room in self.game_map.rooms.values():
-        #     room.lit = 0 
+        for room in self.game_map.rooms.values():
+            room.lit = 0 
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room, self)
         self.player_move_count = 0
@@ -97,7 +97,6 @@ class GameManager:
         elif event.key == pygame.K_RIGHT:
             direction = 'e'
         elif event.key == pygame.K_SPACE:
-            # check the middle button text
             if self.ui.middle_button_label in ("Pick Up", "Attack"):
                 self.ui.handle_middle_button_click()
         elif event.key == pygame.K_q:
@@ -117,10 +116,8 @@ class GameManager:
             pygame.display.set_mode((self.screen_width, self.screen_height))
 
     def draw_initial_ui_onto_surface(self, surface):
-        # Draw the room information onto fade_surface
         self.ui.room_display.display_room_info(surface)
         self.ui.render_player_stats(surface)
-        # Draw the lower part of the UI onto fade_surface
         lower_ui_surface = pygame.Surface((self.screen_width // 2, self.screen_height // 4))
         lower_ui_surface.fill((0, 0, 0))
         padding = 10
@@ -129,9 +126,7 @@ class GameManager:
         border_color = (144, 238, 144)
         pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
         surface.blit(lower_ui_surface, (0, self.screen_height * 3 // 4))
-        # Draw player stats and message display onto fade_surface
         self.ui.message_display.render(surface)
-        # Draw the map onto fade_surface
         map_area_width = self.screen_width // 2
         map_area_height = int(self.screen_height * 0.8)
         map_area_x = self.screen_width // 2

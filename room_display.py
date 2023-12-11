@@ -15,9 +15,7 @@ class RoomDisplay:
         words = text.split(' ')
         lines = []
         current_line = ''
-        
         for word in words:
-            # Check if adding the word exceeds the max width
             if self.custom_font.size(current_line + word)[0] <= max_width:
                 current_line += word + ' '
             else:
@@ -34,7 +32,7 @@ class RoomDisplay:
             self.player_inventory_change = False
         room_info_surface = pygame.Surface((self.window_width // 2, self.window_height))
         room_info_surface.fill((0, 0, 0))
-        padding = 10
+        padding = 50
         container_width = self.window_width // 2 - 2 * padding
         division_y = self.window_height * 3 // 4
         pygame.draw.line(room_info_surface, (144, 238, 144), (0, division_y), (self.window_width // 2, division_y), 1)

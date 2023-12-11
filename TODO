@@ -1,10 +1,8 @@
 TODOS
-- add hp bars for battle visuals
-- test combat for multiple enemies + player
-- for room and region names, designate matching collections of regions so each reset has a common theme; enemy types to match
+- different enemy names
+- add adjectives to decorations
+- implement map clear conditions (take artifact to key room)
+- code the map change event - the UI should remain unchanged, the player level and gear will be retained, and a new map will be created
 
 BUGS
-- inventory
 
-FOR LATER
-- implement map clear conditions (take artifact to key room)

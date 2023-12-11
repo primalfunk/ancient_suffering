@@ -1,5 +1,7 @@
 import logging
+import math
 import pygame
+import random
 from sound_manager import SoundManager
 
 class TitleScreen:
@@ -7,71 +9,96 @@ class TitleScreen:
         self.player_name = "PLAYER"
         self.sounds = SoundManager()
         self.boot_logger = logging.getLogger('boot')
+        self.border_color = (0, 255, 0)
         self.screen = screen
         self.running = True
-        self.font_large = pygame.font.Font(None, 80)
-        self.font_small = pygame.font.Font(None, 30)
+        self.font_large = pygame.font.Font('fonts/title.ttf', 100) 
+        self.font_small = pygame.font.Font('fonts/messages.ttf', 50)
         self.is_finished = False
-        self.color_inactive = pygame.Color('lightskyblue3')
-        self.color_active = pygame.Color('dodgerblue2')
+        self.color_inactive = pygame.Color(20, 20, 100)
+        self.color_active = pygame.Color(110, 110, 200)
+        self.color_direction = 1
+        self.current_title_color = 255
+        self.current_border_color = 255
         self.width = width
         self.height = height
-        self.placeholder_text = 'PLAYER'
+        self.placeholder_text = ''
         self.cursor_visible = False
         self.cursor_timer = pygame.time.get_ticks() 
         self.button_color = self.color_inactive 
         self.active = True
         self.text = "PLAYER"
+        self.random_color = self.get_random_color()
 
-    def init_music(self, volume):
-        pygame.mixer.music.load('music/bgmusic.mp3')
-        pygame.mixer.music.set_volume(volume)
-        pygame.mixer.music.play(-1)
-
+    def get_random_color(self):
+        r = random.randint(35, 95)
+        g = random.randint(55, 95)
+        b = random.randint(75, 95)
+        random_color = (r, g, b)
+        return random_color
+    
     def render_text(self):
-        title_text = self.font_large.render("The Endless Anguish", True, (211, 211, 211))  # Very light gray color
-        self.title_rect = title_text.get_rect(center=(self.screen.get_width() / 2, self.screen.get_height() / 3))
+        # Update the color values
+        self.current_title_color += self.color_direction * 1.2  # Adjust speed as needed
+        if self.current_title_color > 255:
+            self.current_title_color, self.color_direction = 255, -1
+        elif self.current_title_color < 0:
+            self.current_title_color, self.color_direction = 0, 1
+        animated_title_color = (self.current_title_color, 70, 70)
+        animated_border_color = (70, 255 - self.current_title_color, 70)
+        offset_color_value = (self.current_title_color + 128) % 256  # Offset by 128
+        animated_second_border_color = (70, 70, 255 - offset_color_value)
+        title_text = self.font_large.render("The Lords of Chaos", True, animated_title_color)
+        self.title_rect = title_text.get_rect(center=(self.width / 2, self.height / 3))
         self.screen.blit(title_text, self.title_rect)
-        border_color = (144, 238, 144)  # Light green border
-        pygame.draw.rect(self.screen, border_color, self.title_rect.inflate(20, 20), 2)
-        self.input_box = pygame.Rect(100, 150, 140, 32)
-        self.button = pygame.Rect(100, 200, 100, 32)
-        self.color = self.color_inactive
-        self.font_small = pygame.font.Font(None, 30)
+        title_border_rect = self.title_rect.inflate(20, 20)
+        pygame.draw.rect(self.screen, animated_border_color, title_border_rect, 2)
+        second_title_border_rect = self.title_rect.inflate(24, 24)  # Inflate by an additional 2 pixels on each side
+        pygame.draw.rect(self.screen, animated_second_border_color, second_title_border_rect, 2)
+
+        self.position_ui_elements()
+        self.draw_label()
+        self.draw_input_box()
+        self.draw_button()
 
     def position_ui_elements(self):
-        title_bottom = self.title_rect.bottom
-        center_x = self.screen.get_width() / 2
-        input_box_width = self.input_box.width
-        button_width = self.button.width
-        label_width = self.font_small.size("What is your name?")[0]
-        self.input_box.topleft = (center_x - input_box_width // 2, title_bottom + 80)
-        self.button.topleft = (center_x - button_width // 2, title_bottom + 120)
-        self.label_pos = (center_x - label_width // 2, title_bottom + 40)
-
-    def draw_label(self):
-        label = self.font_small.render("What is your name?", True, (211, 211, 211))
-        self.screen.blit(label, self.label_pos)
+        title_border_rect = self.title_rect.inflate(20, 20)
+        padding = 40
+        self.label_pos = (title_border_rect.left, title_border_rect.bottom + padding)
+        input_box_width = 200
+        label_width, label_height = self.font_small.size("What is your name?")
+        input_box_x = self.label_pos[0] + label_width + 10
+        input_box_y = self.label_pos[1]
+        self.input_box = pygame.Rect(input_box_x, input_box_y, input_box_width, label_height)
+        button_width = 200
+        button_height = label_height
+        button_x = self.width / 2 - button_width / 2
+        button_y = input_box_y + label_height + padding
+        self.button = pygame.Rect(button_x, button_y, button_width, button_height)
 
     def draw_input_box(self):
         current_text = self.text if self.active else self.placeholder_text
-        txt_color = self.color if self.active else pygame.Color('grey')  # Use grey color for placeholder
+        txt_color = self.color_active if self.active else self.color_inactive
         txt_surface = self.font_small.render(current_text, True, txt_color)
-        width = max(200, txt_surface.get_width() + 10)
-        self.input_box.w = width
-        box_color = self.color_active if self.active else self.color_inactive
-        pygame.draw.rect(self.screen, box_color, self.input_box)
-        self.screen.blit(txt_surface, (self.input_box.x + 5, self.input_box.y + 5))
+        text_y = self.input_box.y + (self.input_box.height - txt_surface.get_height()) / 2
+        self.screen.blit(txt_surface, (self.input_box.x + 5, text_y))
         if self.active and self.cursor_visible:
             cursor_x = self.input_box.x + txt_surface.get_width() + 5
-            cursor_y = self.input_box.y + 5
-            cursor_rect = pygame.Rect(cursor_x, cursor_y, 2, self.font_small.get_height())
-            pygame.draw.rect(self.screen, self.color, cursor_rect)
+            cursor_height = self.font_small.get_height()
+            cursor_y = self.input_box.y + (self.input_box.height - cursor_height) / 2
+            cursor_rect = pygame.Rect(cursor_x, cursor_y, 2, cursor_height)
+            pygame.draw.rect(self.screen, pygame.Color('white'), cursor_rect)
+    
+    def draw_label(self):
+        label_text = "What is your name?"
+        label = self.font_small.render(label_text, True, (200, 200, 200))
+        self.screen.blit(label, self.label_pos)
 
     def draw_button(self):
         pygame.draw.rect(self.screen, self.button_color, self.button)
-        button_label = self.font_small.render("Start", True, (211, 211, 211))
-        self.screen.blit(button_label, (self.button.x + 5, self.button.y + 5))
+        button_label = self.font_small.render("Start", True, pygame.Color('white'))
+        button_label_rect = button_label.get_rect(center=self.button.center)
+        self.screen.blit(button_label, button_label_rect.topleft)
 
     def process_start_game(self):
         self.player_name = self.text if self.text else "PLAYER"
@@ -108,14 +135,18 @@ class TitleScreen:
                 self.text += event.unicode
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print(f"Mouse click at {event.pos}") 
             if self.input_box.collidepoint(event.pos):
                 if not self.active: 
                     self.text = ''
                 self.active = True
             else:
                 self.active = False
-            print(f"Input box active state: {self.active}")
             if self.button.collidepoint(event.pos) and not self.is_finished:
                 self.process_start_game()
                 return
+            
+    def init_music(self, volume):
+        pygame.mixer.music.load('music/bgmusic.mp3')
+        pygame.mixer.music.set_volume(volume)
+        pygame.mixer.music.play(-1)
+
