@@ -8,7 +8,7 @@ class Combat:
     logging_config.setup_logging()
     LIGHT_BLUE = (173, 216, 230)
     DARK_BLUE = (50, 50, 230)
-    LIGHT_RED = (255, 182, 193)
+    LIGHT_RED = (230, 50, 50)
     BRIGHT_RED = (255, 0, 0)
     ORANGE = (255, 165, 0)
 

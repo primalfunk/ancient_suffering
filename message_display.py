@@ -13,7 +13,7 @@ class MessageDisplay:
         self.font = font
         self.scroll_pos = 0
 
-    def add_message(self, message, color=(255, 255, 255)):
+    def add_message(self, message, color=(0, 0, 0)):
         # Convert message to tuple if it's not already one
         if not isinstance(message, tuple):
             message = (message, color)
@@ -26,7 +26,10 @@ class MessageDisplay:
         self.scroll_pos = max(0, total_lines - visible_lines)
    
     def render(self, surface):
+        message_area = pygame.Rect(self.x, self.y, self.width, self.height)
         surface_area = pygame.Rect(self.x, self.y, self.width, self.height)
+        background_color = (255, 255, 255)  # white
+        surface.fill(background_color, message_area)
         surface.set_clip(surface_area)
         y_offset = self.y + self.vertical_pad - self.scroll_pos * self.font.get_height()
         for message, color in self.messages:
