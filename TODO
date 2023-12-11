@@ -1,4 +1,5 @@
 TODOS
+- add hp bars for battle visuals
 - test combat for multiple enemies + player
 - for room and region names, designate matching collections of regions so each reset has a common theme; enemy types to match
 

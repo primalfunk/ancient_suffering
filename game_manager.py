@@ -136,6 +136,7 @@ class GameManager:
         map_area_height = int(self.screen_height * 0.8)
         map_area_x = self.screen_width // 2
         self.map_visualizer.draw_map(surface, offset_x=map_area_x, width=map_area_width, height=map_area_height)
+        self.ui.draw_hp_bar()
 
     def check_for_combat(self):
         self.is_combat = self.player.in_combat

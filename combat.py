@@ -17,7 +17,6 @@ class Combat:
         self.round_count = 0
         self.combat_logger = logging.getLogger('combat')
         self.player = player
-        self.is_player_attacker = is_attacker
         self.enemy_manager = enemy_manager
         self.message_display = message_display
         self.winner = None
@@ -36,7 +35,8 @@ class Combat:
         self.defender.in_combat = True
         self.last_update_time = pygame.time.get_ticks()
         self.turn = 'attacker'
-
+        self.is_player_attacker = is_attacker
+        
     def attack(self, attacker, defender):
         self.combat_logger.debug(f"Starting attack: {attacker.name} attacking {defender.name}")
         # Luck boost potential for player character only
@@ -85,7 +85,6 @@ class Combat:
             damage = int(max(2, calculated_damage))
             self.combat_logger.debug(f'Ending damage calculation is max of 2 or calculated_damage {calculated_damage}')
             self.combat_logger.debug(f"Damage calculation is (atk {attacker.atk} * variance {attack_variance}) minus (defn {defender.defn} * variance {defense_variance}), Raw damage={calculated_damage}, Final damage={damage}")
-            
             base_critical_chance = 33  # Increased base critical chance
             critical_hit_chance = base_critical_chance + (attacker.wis - defender.wis) / 4
             critical_attempt = random.randint(0, 100)
@@ -103,8 +102,10 @@ class Combat:
                 self.message_display.add_message(attack_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)
             defender.hp -= int(damage)
             self.sounds.play_sound('round', 0.6)
-            if self.is_player_attacker:
+            
+            if self.turn == 'attacker' and self.is_player_attacker:
                 self.player_damage += damage
+       
         else:
             miss_message = f"* {attacker.name} misses {defender.name}"
             self.message_display.add_message(miss_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)

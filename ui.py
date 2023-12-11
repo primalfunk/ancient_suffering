@@ -25,17 +25,43 @@ class UI:
         self.to_render = []
         self.game_manager = game_manager
         self.room_display = RoomDisplay(screen, player, self.custom_font, (window_width, window_height))
-        message_display_height = window_height // 2
-        self.message_display = MessageDisplay(
+        self.message_display_height = window_height // 2
+        self.message_display_y = 2 * self.window_height // 3 - self.message_display_height
+        self.message_display_bottom = self.message_display_y + self.message_display_height
+        self.message_display = MessageDisplay(    
             x=0, 
-            y=2*self.window_height // 3 - message_display_height, 
+            y=self.message_display_y, 
             width=self.window_width // 2, 
-            height=message_display_height,
+            height=self.message_display_height,
             font=self.custom_font
         )
         self.item_category_map = self.parse_item_categories()
         self.current_state = None
 
+    def draw_hp_bar(self):
+        surface_height = self.window_height * 3 // 4 - self.message_display_bottom
+        surface_width = self.window_width // 2
+        surface = pygame.Surface((surface_width, surface_height))
+        reduced_font = pygame.font.Font('customfont.ttf', 18)
+
+        def draw_bar(hp, max_hp, y, color, label):
+            text = reduced_font.render(label, True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_rect.topleft = (5, y - 5)
+            surface.blit(text, text_rect)
+            hp_ratio = hp / max_hp
+            max_hp_bar_width = surface_width - text_rect.width - 15
+            hp_bar_width = int(max_hp_bar_width * hp_ratio)
+            hp_bar_height = 5
+            hp_bar_rect = pygame.Rect(text_rect.topright[0] + 5, y, hp_bar_width, hp_bar_height)
+            pygame.draw.rect(surface, color, hp_bar_rect)
+
+        draw_bar(self.player.hp, self.player.max_hp, 20, (50, 230, 50), 'Player HP')
+        y_offset = 40
+        for enemy in self.player.current_room.enemies:
+            draw_bar(enemy.hp, enemy.max_hp, y_offset, (230, 50, 50), 'Enemy HP')
+            y_offset += 20
+        self.screen.blit(surface, (0, self.message_display_bottom))
 
     def parse_item_categories(self):
         category_map = {}
@@ -59,25 +85,28 @@ class UI:
         padding = 10
         self.render_middle_button_and_inventory_frame(lower_ui_surface, padding)
         self.render_direction_buttons(lower_ui_surface, padding)
-        # Draw the border around the lower_ui_surface
         border_color = (144, 238, 144)
         pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
         self.screen.blit(lower_ui_surface, (0, self.window_height * 3 // 4))
         self.render_player_stats(self.screen)
         self.message_display.render(self.screen)
+        self.draw_hp_bar()
 
     def render_player_stats(self, screen):
+        stats_height = self.window_height // 8
         custom_font = pygame.font.Font('customfont.ttf', 20)
-        stats_surface = pygame.Surface((self.window_height - 160, 160))
+        stats_surface = pygame.Surface((self.window_width // 2, stats_height))
         stats_surface.fill((50, 50, 50))
+
         first_column_attributes = ['name', 'level', 'hp', 'mp', 'exp']
         second_column_attributes = ['atk', 'defn', 'int', 'wis', 'con', 'eva']
         third_column_attributes = ['region', 'name', 'x', 'y']
         quarter_width = (self.window_width // 2) // 4
         offsets = [quarter_width * (i + 1) - (quarter_width // 2) for i in range(4)]
         text_color = (144, 236, 144)  # Consistent text color
+        
         def draw_column_border(x_offset, color):
-            border_rect = pygame.Rect(x_offset - quarter_width // 2, 0, quarter_width, 160)
+            border_rect = pygame.Rect(x_offset - quarter_width // 2, 0, quarter_width, stats_height)
             pygame.draw.rect(stats_surface, color, border_rect, 2)
         column_colors = [(135, 206, 235), (152, 251, 152), (230, 230, 250), (255, 253, 208)]
         for offset, color in zip(offsets, column_colors):
@@ -115,7 +144,7 @@ class UI:
                 stats_surface.blit(equipment_surface, (offsets[3] - (equipment_surface.get_width() // 2), y_offset))
                 y_offset += 20
         half_window_width = self.window_width // 2
-        screen.blit(stats_surface, (half_window_width, self.window_height - 160))
+        screen.blit(stats_surface, (half_window_width, self.window_height - stats_height))
 
     def render_middle_button_and_inventory_frame(self, surface, padding):
         section_width = (surface.get_width() - 2 * padding) // 3
@@ -127,7 +156,7 @@ class UI:
         label_surface = self.custom_font.render(inventory_label, True, (255, 255, 255))
         surface.blit(label_surface, (frame_x + (frame_width - label_surface.get_width()) // 2, relative_division_y + padding))
         frame_rect = pygame.Rect(frame_x, relative_division_y + label_surface.get_height() + padding, frame_width, frame_height - label_surface.get_height())
-        pygame.draw.rect(surface, (200, 200, 200), frame_rect, 1)
+        pygame.draw.rect(surface, (144, 236, 144), frame_rect, 1)
         item_start_y = relative_division_y + label_surface.get_height() + 2 * padding
         item_spacing = 20
         self.inventory_item_rects.clear()  # Clear previous rectangles

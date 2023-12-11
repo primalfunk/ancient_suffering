@@ -47,8 +47,9 @@ class Enemy:
         return False
     
     def check_aggro(self, player_x, player_y):
+        # enemies always see you before you see them, or at worst, at the same time; can't be snuck up on
         distance = ((self.x - player_x) ** 2 + (self.y - player_y) ** 2) ** 0.5
-        if distance <= 5: # all enemies see you before you see them, unless you have the best light source; then it's even
+        if distance <= 5:
             self.aggro = True
         else:
             self.aggro = False
