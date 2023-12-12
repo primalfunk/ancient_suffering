@@ -10,7 +10,7 @@ class Enemy:
         self.speed = 2
         self.current_room.enemies.append(self)
         self.level = max(level, 1)
-        self.max_hp = 30
+        self.max_hp = 25
         self.hp = self.max_hp
         self.aggro = False
         self.in_combat = False
@@ -18,33 +18,35 @@ class Enemy:
         self.initialize_stats_to_level(self.level)
 
     def get_stats(self):
-        return {"level": self.level, "atk": self.atk, "defn": self.defn, "int": self.int, "wis": self.wis, "con": self.con, "eva": self.eva, "max_hp": self.max_hp, "max_mp": self.max_mp}
+        return {"name": self.name, "level": self.level, "atk": self.atk, "defn": self.defn, "int": self.int, "wis": self.wis, "con": self.con, "eva": self.eva, "max_hp": self.max_hp, "max_mp": self.max_mp}
         
     def initialize_stats_to_level(self, level):
-        self.atk = 5
-        self.defn = 5
-        self.int = 5
-        self.wis = 5
-        self.con = 5
-        self.eva = 5
-        self.exp = 30
-        self.hp = 40
+        self.atk = random.randint(5, 10)
+        self.defn = random.randint(5, 10)
+        self.int = random.randint(5, 10)
+        self.wis = random.randint(5, 10)
+        self.con = random.randint(5, 10)
+        self.eva = random.randint(5, 10)
+        self.exp = 25 * int(max(1,  level  // 3)) # experience reward
+        self.hp = 25
         self.mp = 10
-        self.max_hp = 40
+        self.max_hp = 25
         self.max_mp = 10
         for lvl in range(1, level + 1):
             stat_increases = {
-                'max_hp': self.calculate_stat_increase(self.max_hp, 40, 999, lvl),
+                'max_hp': self.calculate_stat_increase(self.max_hp, 25, 1200, lvl), # enemies have higher HP
                 'max_mp': self.calculate_stat_increase(self.max_mp, 10, 999, lvl),
-                'atk': self.calculate_stat_increase(self.atk, 5, 255, lvl),
-                'defn': self.calculate_stat_increase(self.defn, 5, 255, lvl),
-                'int': self.calculate_stat_increase(self.int, 5, 255, lvl),
-                'wis': self.calculate_stat_increase(self.wis, 5, 255, lvl),
-                'con': self.calculate_stat_increase(self.con, 5, 300, lvl), # extended constitution for enemies
-                'eva': self.calculate_stat_increase(self.eva, 5, 200, lvl) # lower evasion for enemies
+                'atk': self.calculate_stat_increase(self.atk, 10, 255, lvl),
+                'defn': self.calculate_stat_increase(self.defn, 10, 255, lvl),
+                'int': self.calculate_stat_increase(self.int, 10, 255, lvl),
+                'wis': self.calculate_stat_increase(self.wis, 10, 255, lvl),
+                'con': self.calculate_stat_increase(self.con, 10, 255, lvl),
+                'eva': self.calculate_stat_increase(self.eva, 10, 200, lvl)
             }
             for stat, increase in stat_increases.items():
                 setattr(self, stat, getattr(self, stat) + increase)
+            self.hp = self.max_hp
+            self.mp = self.max_mp
 
     def calculate_stat_increase(self, current_stat, initial_value, max_value, current_level):
         growth_rate = (max_value - initial_value) / 99  # Linear growth rate

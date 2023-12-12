@@ -9,6 +9,7 @@ class Map:
         self.map_logger = logging.getLogger('map')
         self.size = size
         self.rooms = {}
+        self.rooms_with_keys = []
         self.generate_map()
         MapElaborator(self, 'words.json')
 

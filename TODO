@@ -1,7 +1,4 @@
 BUGS - none? lol
 
 TODOS
-- adjust UI on victory condition to not show the intro text again
-- add state change to show a "level intro" screen, giving the level number
-- calculate map size according to the level number, increasing size with each map
-- balance combat again
+- add int gear, wis gear, eva gear

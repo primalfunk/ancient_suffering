@@ -11,7 +11,6 @@ class RoomConnector:
         self.rooms = self.map.rooms
         self.establish_initial_connections()
         self.ensure_connectivity()
-        self.reduce_dead_ends()
         self.remove_invalid_connections()
 
     def get_adjacent_room(self, room, direction):
@@ -101,7 +100,6 @@ class RoomConnector:
         return None
 
     def ensure_connectivity(self):
-        # Start with BFS from a random room
         start = next(iter(self.rooms.values()))
         visited = set()
         queue = deque([start])
@@ -113,8 +111,6 @@ class RoomConnector:
                 for direction, next_room in current_room.connections.items():
                     if next_room and next_room not in visited:
                         queue.append(next_room)
-
-        # Connect any remaining unconnected rooms
         for room in self.rooms.values():
             if room not in visited:
                 nearest_connected_room = self.find_nearest_connected_room(room)
@@ -122,8 +118,6 @@ class RoomConnector:
                     self.establish_connection(room, nearest_connected_room)
                     queue.append(room)  # Add room to queue for BFS
                     visited.add(room)  # Mark room as visited
-
-        # Check if all rooms are now connected
         self.remove_unconnected_rooms()
         assert len(visited) == len(self.rooms), "Map is still not fully connected."
 
@@ -143,25 +137,21 @@ class RoomConnector:
             for direction in list(room.connections.keys()):
                 connected_room = room.connections[direction]
                 if connected_room not in self.rooms.values():
-                    # Remove the invalid connection
                     room.connections[direction] = None
 
-    def reduce_dead_ends(self):
-        # Identify dead end rooms
-        dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
-        self.connector_logger.debug(f"Starting dead end count is {len(dead_end_rooms)}")
-        target_count = len(dead_end_rooms) - 11 * 2 # exactly 11 dead-ends; one of each of the three tools (backpack, lantern, bedroll), three weapons, three armors, one random artifact, and one 'key' room we'll use later 
-
-        for room in random.sample(dead_end_rooms, min(target_count, len(dead_end_rooms))):
-            # Identify potential new connections
-            potential_connections = self.get_potential_connections(room)
-
-            if potential_connections:
-                new_connection, _ = random.choice(potential_connections)  # Unpack the tuple
-                self.establish_connection(room, new_connection)
-
-        dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
-        self.connector_logger.debug(f"Ending dead end count is {len(dead_end_rooms)}")
+    def clear_remaining_dead_ends(self):
+            dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
+            self.connector_logger.debug(f"Starting dead end count is {len(dead_end_rooms)}")
+            # Filter out rooms with key items
+            rooms_with_key_items = self.map.rooms_with_keys
+            dead_end_rooms = [room for room in dead_end_rooms if room not in rooms_with_key_items]
+            for room in dead_end_rooms:
+                potential_connections = self.get_potential_connections(room)
+                if potential_connections:
+                    new_connection, _ = random.choice(potential_connections)  # Unpack the tuple
+                    self.establish_connection(room, new_connection)
+            dead_end_rooms = [room for room in self.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
+            self.connector_logger.debug(f"Ending dead end count is {len(dead_end_rooms)}")
 
     def remove_unconnected_rooms(self):
         unconnected_rooms = [room_id for room_id, room in self.rooms.items() if not room.connections]

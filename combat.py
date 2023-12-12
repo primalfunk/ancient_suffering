@@ -36,11 +36,12 @@ class Combat:
         self.last_update_time = pygame.time.get_ticks()
         self.turn = 'attacker'
         self.is_player_attacker = is_attacker
+        self.player_won = False
         
     def attack(self, attacker, defender):
         self.combat_logger.debug(f"Starting attack: {attacker.name} attacking {defender.name}")
         luck_attempt = random.random()
-        luck_chance = 0.10
+        luck_chance = 0.20
         luck_success = luck_attempt <= luck_chance
         original_atk = attacker.atk
         original_defn = attacker.defn
@@ -48,8 +49,8 @@ class Combat:
         original_int = attacker.int
         original_wis = attacker.wis
         if attacker == self.player:
-            if luck_success:  # 10% chance of a luck boost
-                luck_boost = 1.2  # 20% increase in stats
+            if luck_success:  # 20% chance of a luck boost
+                luck_boost = 1.33  # 33% increase in stats
                 attacker.atk = int(attacker.atk * luck_boost)
                 attacker.defn = int(attacker.defn * luck_boost)
                 attacker.eva = int(attacker.eva * luck_boost)
@@ -57,57 +58,48 @@ class Combat:
                 attacker.wis = int(attacker.wis * luck_boost)
                 self.combat_logger.debug(f"Luck boost applied. Original stats: ATK={original_atk}, DEFN={original_defn}, EVA={original_eva}; New stats: ATK={attacker.atk}, DEFN={attacker.defn}, EVA={attacker.eva}")
         critical_hit = False
-        hit_chance = max(10, min(100, 70 + attacker.int - defender.eva))
+        if self.is_player_attacker:
+            hit_chance = max(10, min(100, 70 + attacker.int - int(2 * defender.eva / 3)))
         hit_attempt = random.randint(0, 100)
         hit = hit_attempt <= hit_chance
         damage = 0 # so it's picked up in case of a miss
         if hit:
             self.combat_logger.debug(f'Hit successful, checking dodge.')
             dodge_attempt = random.randint(0, 100)
-            dodge_chance = 10  # 10% chance to dodge
-            self.combat_logger.debug(f'dodge attempt {dodge_attempt} < dodge chance? {dodge_chance}: {dodge_attempt <= dodge_chance}')
+            dodge_chance = 10
             if dodge_attempt <= dodge_chance:
                 dodge_message = f"* {defender.name} dodges the attack!"
                 self.message_display.add_message(dodge_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)
-                self.combat_logger.debug(f"{defender.name} dodged the attack. No damage dealt.")
                 return 0, False  # No damage, no critical hit
-            self.combat_logger.debug(f'Defender failed dodge attempt, calculating damage.')
-            attack_variance = random.uniform(0.6, 2)
-            defense_variance = random.uniform(0.6, 2)
-            self.combat_logger.debug(f'attack variance and defense variance calculations: {attack_variance}, {defense_variance}')
-            calculated_damage = (attacker.atk * attack_variance) - (defender.defn * defense_variance)
-            self.combat_logger.debug(f'attacker atk {attacker.atk} * attack variance {attack_variance} - defender defn {defender.defn} * defense_variance {defense_variance}')
-            self.combat_logger.debug(f"calculated damage is {calculated_damage}")
-            damage = int(max(2, calculated_damage))
-            self.combat_logger.debug(f'Ending damage calculation is max of 2 or calculated_damage {calculated_damage}')
-            self.combat_logger.debug(f"Damage calculation is (atk {attacker.atk} * variance {attack_variance}) minus (defn {defender.defn} * variance {defense_variance}), Raw damage={calculated_damage}, Final damage={damage}")
-            if self.is_player_attacker:
-                base_critical_chance = 24
-            else:
-                base_critical_chance = 0
+            attack_variance = random.uniform(0.8, 1.01)
+            defense_variance = random.uniform(0.8, 1.01)
+            calculated_damage = int((attacker.atk * attack_variance) - ((defender.defn * defense_variance) * 2 / 3))
+            damage = int(max(0, calculated_damage)) # damage
+            base_critical_chance = 10
             critical_hit_chance = base_critical_chance + (attacker.wis - defender.wis) / 8
             critical_attempt = random.randint(0, 100)
             critical_hit = critical_attempt < critical_hit_chance
-            self.combat_logger.debug(f"Critical hit check: Attempt={critical_attempt} Chance={critical_hit_chance}%, Result={'Yes' if critical_hit else 'No'}")
-            if critical_hit:
+            if critical_hit and self.is_player_attacker:
                 damage = int(damage*(2 + random.random()))
-                self.combat_logger.debug(f"Critical hit! Final damage after multiplier: {damage}")
-            if critical_hit:
                 crit_message = f"* Critical hit by {attacker.name} doing {damage} damage!"
                 self.message_display.add_message(crit_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)
             else:
-                attack_message = f"* {attacker.name} hits {defender.name} for {damage} damage."
+                actual_damage = round(damage, 0)
+                print(f"Actual damage: {actual_damage}")
+                if actual_damage == 0:
+                    attack_message = f"* {attacker.name} hits {defender.name}, but the attack is harmless."
+                else:
+                    attack_message = f"* {attacker.name} hits {defender.name} for {damage} damage."
+                
                 self.message_display.add_message(attack_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)
             defender.hp -= int(damage)
             self.sounds.play_sound('round', 0.6)
             if self.turn == 'attacker' and self.is_player_attacker:
                 self.player_damage += damage
-       
         else:
             miss_message = f"* {attacker.name} misses {defender.name}"
             self.message_display.add_message(miss_message, self.DARK_BLUE if attacker == self.player else self.LIGHT_RED)
         self.round_count += 1
-        self.combat_logger.debug(f"End of attack: {attacker.name} did {damage} damage to {defender.name}. {defender.name}'s HP {defender.hp}")
         attacker.atk = original_atk
         attacker.defn = original_defn
         attacker.eva = original_eva
@@ -137,19 +129,17 @@ class Combat:
         self.combat_over()
 
     def determine_winner(self):
-        if self.attacker.hp > self.defender.hp:
-            self.winner = self.attacker
-            if self.is_player_attacker:
-                self.sounds.play_sound('win', 0.75)
-            else:
-                self.sounds.play_sound('gameover', 0.75)
-        elif self.defender.hp > self.attacker.hp:
-            self.winner = self.defender
+        winner_banner = ""
+        if self.player.hp > 0:
+            self.sounds.play_sound('win', 0.75)
+            self.winner = self.player
+            self.player_won = True
+            winner_banner = "has won!"
         else:
-            self.winner = None
-        winner_name = self.winner.name if self.winner else "None"
-        self.sounds.play_sound('win', 0.75)
-        self.message_display.add_message(f"* Combat has ended. Winner: {winner_name}", self.ORANGE)
+            self.player_won = False
+            self.sounds.play_sound('gameover', 0.75)
+            winner_banner = "has lost!"
+        self.message_display.add_message(f"* Combat has ended. {self.player.name} {winner_banner}", self.ORANGE)
         self.message_display.add_message(f"* The battle lasted {self.round_count // 2} rounds; {self.player.name} dealt {self.player_damage} damage.")
 
     def combat_over(self):

@@ -10,9 +10,8 @@ from ui import UI
 
 class GameManager:
     def __init__(self, screen, width, height):
-        self.size = 25
-        self.boot_logger = logging.getLogger('boot')
-        self.game_map = Map(self.size)
+        self.level = 1
+        self.game_map = Map(self.get_map_size())
         self.screen = screen
         self.width = width
         self.height = height
@@ -37,6 +36,9 @@ class GameManager:
         self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
         self.sounds = SoundManager()
 
+    def get_map_size(self):
+        return 12 + (self.level * 2)
+
     def move_player(self, direction):
         if direction and self.player.can_move(direction, self.game_map):
             cardinals = {"n": "north",
@@ -59,8 +61,9 @@ class GameManager:
 
     def victory_conditions(self):
         # Reset the game map and enemies, clear inventory
+        self.level += 1
         self.player.inventory.items = []
-        self.game_map = Map(self.size)
+        self.game_map = Map(self.get_map_size())
         for room in self.game_map.rooms.values():
             room.lit = 0
         start_room = random.choice(list(self.game_map.rooms.values()))
@@ -90,8 +93,7 @@ class GameManager:
         }.get(direction, (0, 0))
     
     def restart_game(self):
-        self.boot_logger.debug("Restarting game...")
-        self.game_map = Map(self.size)
+        self.game_map = Map(self.get_map_size())
         for room in self.game_map.rooms.values():
             room.lit = 0 
         start_room = random.choice(list(self.game_map.rooms.values()))
@@ -101,7 +103,6 @@ class GameManager:
         self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.width)
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
         self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
-        self.boot_logger.debug("Game restarted successfully.")
 
     def process_keypress(self, event):
         direction = None

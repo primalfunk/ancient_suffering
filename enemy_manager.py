@@ -7,7 +7,7 @@ class EnemyManager:
         self.name = ""
         self.game_map = game_map
         self.player = player
-        self.spawn_count = self.game_map.size // 2
+        self.spawn_count = self.game_map.size // 3
         self.enemies = []
         self.spawn_enemies(self.spawn_count, self.player.level)
         self.player_move_count = player_move_count
@@ -34,13 +34,14 @@ class EnemyManager:
             enemy_level = self.determine_enemy_level(level_indicator, player_level)
             enemy = self.create_enemy(potential_start, enemy_level, num)
             self.enemies.append(enemy)
+            print(f"Enemy generated: {enemy.get_stats()}")
 
     def determine_enemy_level(self, level_indicator, player_level):
         if level_indicator < 6:
             return player_level + 3
         elif level_indicator < 17:
             return player_level + 2
-        elif level_indicator < 43:
+        elif level_indicator < 33:
             return player_level + 1
         else:
             return player_level

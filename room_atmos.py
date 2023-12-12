@@ -9,7 +9,6 @@ class RoomAtmos:
     def create_atmosphere(self):
         colors = self.colors.copy()
         atmos = self.atmos.copy()
-        print(f"length of colors: {len(colors)}; length of atmos: {len(atmos)}")
         random.shuffle(colors)
         random.shuffle(atmos)
         for room in self.map.rooms.values():

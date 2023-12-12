@@ -9,7 +9,7 @@ class MapVisualizer:
         self.game_map = game_map
         self.player = player
         self.grid_width_in_cells = self.game_map.size
-        self.border_width = 4
+        self.border_width = 2
         self.padding = 10
         additional_constraint = 10
         max_available_width = screen_width / 2 - additional_constraint
@@ -27,7 +27,7 @@ class MapVisualizer:
         self.current_lit = self.calculate_percent_lit()
         self.x_offset = self.game_manager.map_area_x
         self.tick_count = 0
-        self.flash_rate = 30
+        self.flash_rate = 15
 
     def get_color_intensity(self, base_color, light_level, max_light_level=5):
         factor = light_level / max_light_level
@@ -69,12 +69,7 @@ class MapVisualizer:
                 base_room_color = self.region_colors[region_index]
                 base_dead_end_color = (155, 155, 0)
                 room_color = self.get_color_intensity(base_room_color, room.lit)
-                if self.player.got_relic and room.is_target:
-                    if self.tick_count < self.flash_rate:
-                        room_color = (0, 200, 0)  # Green
-                    else:
-                        room_color = (255, 255, 0) # Yellow
-                elif room_pos == (self.player.x, self.player.y):
+                if room_pos == (self.player.x, self.player.y):
                     pygame.draw.rect(screen, (0, 255, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2)
                     room_color = (0, 0, 255)  # Player's room
                 elif room_pos in enemy_positions:
@@ -82,9 +77,15 @@ class MapVisualizer:
                     room_color = self.get_color_intensity(base_enemy_color, room.lit)
                 elif room in self.dead_ends and len(room.decorations) > 0:
                     room_color = self.get_color_intensity(base_dead_end_color, room.lit)
-                self.draw_connectionless_edges(screen, room, x, y)
             else:
                 room_color = (0, 0, 0)
+            # Should be visible flashing from wherever it is
+            if self.player.got_relic and room.is_target:
+                if self.tick_count < self.flash_rate:
+                    room_color = (0, 200, 0)  # Green
+                else:
+                    room_color = (255, 255, 0) # Yellow
+                self.draw_connectionless_edges(screen, room, x, y)
             pygame.draw.rect(screen, room_color, (x, y, self.cell_size, self.cell_size))
             if room.lit > 0:
                 smaller_rect_x = x + self.cell_size / 8
@@ -95,6 +96,15 @@ class MapVisualizer:
                 for direction, connected_room in room.connections.items():
                     if connected_room and (connected_room.x, connected_room.y) in self.explored:
                         self.draw_connection(screen, x, y, direction, room_color)
+        # Determine the border dimensions
+        border_x = self.padding
+        border_y = 0
+        max_room_x = max(room.x for room in self.game_map.rooms.values())
+        max_room_y = max(room.y for room in self.game_map.rooms.values())
+        border_width = (max_room_x + 1) * (self.cell_size + self.connection_size) + self.padding * 2
+        border_height = (max_room_y + 1) * (self.cell_size + self.connection_size)
+        border_color = (144, 236, 144)
+        pygame.draw.rect(screen, border_color, (self.x_offset - self.padding + border_x, border_y, border_width, border_height), self.border_width)
 
     def draw_all_connections(self):
         for room in self.game_map.rooms.values():

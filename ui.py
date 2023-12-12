@@ -38,7 +38,10 @@ class UI:
         )
         self.item_category_map = self.parse_item_categories()
         self.current_state = None
-        self.show_intro_message()
+        if self.game_manager.level == 1:
+            self.show_intro_message()
+        else:
+            self.show_level_message()
 
     def get_random_color(self):
             r = random.randint(0, 120)
@@ -53,35 +56,47 @@ class UI:
         self.message_display.add_message('In this realm, everything is familiar, but nothing makes sense. Your only hope of escape is to find the artifact of your reality - wherever it may be hidden in this twisted land.', self.get_random_color())
         self.message_display.add_message('')
         self.message_display.add_message("")
-        self.message_display.add_message("Move between areas with the keyboard direction arrows, or clicking the buttons below. You can restart or quit at any time by pressing 'q' or 'r' on your keyboard.", self.get_random_color())
+        self.message_display.add_message("You can move between areas with the keyboard direction arrows, or clicking the buttons below. You can restart or quit at any time by pressing 'q' or 'r' on your keyboard.", self.get_random_color())
         self.message_display.add_message("")
-        self.message_display.add_message("Go forth, and good luck - may the Lords of Chaos have mercy on you.", (0, 0, 0))
+        self.message_display.add_message("When you have found the artifact, the way out will call to you - may the Lords of Chaos have mercy on your soul.", (0, 0, 0))
+        self.message_display.add_message("'Abandon hope, all ye who enter here' - Dante, translation 1814", (255, 120, 0))
         self.message_display.add_message("")
-        self.message_display.add_message("--------The Chaos Realm---------")
+        self.message_display.add_message("--------The Chaos Realm ( Level 1 ) ---------")
+
+    def show_level_message(self):
+        self.message_display.add_message(f'You have reached level {self.game_manager.level} of the Chaos Realm.')
+        self.message_display.add_message(f'Your enemies have grown stronger - are you prepared?')
+        self.message_display.add_message(f"--------The Chaos Realm ( Level {self.game_manager.level} ) ---------")
+        self.message_display.add_message("")
 
     def draw_hp_bar(self):
         surface_height = self.window_height * 3 // 4 - self.message_display_bottom
         surface_width = self.window_width // 2
         surface = pygame.Surface((surface_width, surface_height))
-        reduced_font = pygame.font.Font('fonts/messages.ttf', 18)
-
+        reduced_font = pygame.font.Font('fonts/messages.ttf', 19)
         def draw_bar(hp, max_hp, y, color, label):
             text = reduced_font.render(label, True, (255, 255, 255))
             text_rect = text.get_rect()
-            text_rect.topleft = (5, y - 5)
+            text_rect.topleft = (10, y)
             surface.blit(text, text_rect)
+            # Maximum HP bar width is consistent for all entities
+            max_hp_bar_width = surface_width - text_rect.width - 30
+            # Draw background bar representing max HP
+            hp_bar_height = int(0.7 * text_rect.height)
+            hp_bar_y = y + (text_rect.height - hp_bar_height) // 2
+            max_hp_bar_rect = pygame.Rect(text_rect.topright[0] + 5, hp_bar_y, max_hp_bar_width, hp_bar_height)
+            pygame.draw.rect(surface, (128, 128, 128), max_hp_bar_rect)  # Grey color for max HP background
+            # Draw current HP bar
             hp_ratio = hp / max_hp
-            max_hp_bar_width = surface_width - text_rect.width - 15
             hp_bar_width = int(max_hp_bar_width * hp_ratio)
-            hp_bar_height = 5
-            hp_bar_rect = pygame.Rect(text_rect.topright[0] + 5, y, hp_bar_width, hp_bar_height)
+            hp_bar_rect = pygame.Rect(text_rect.topright[0] + 5, hp_bar_y, hp_bar_width, hp_bar_height)
             pygame.draw.rect(surface, color, hp_bar_rect)
-
-        draw_bar(self.player.hp, self.player.max_hp, 20, (50, 230, 50), 'Player HP')
-        y_offset = 40
+            return text_rect.height
+        y_offset = 0
+        y_offset += draw_bar(self.player.hp, self.player.max_hp, y_offset, (50, 230, 50), 'Player HP')
         for enemy in self.player.current_room.enemies:
-            draw_bar(enemy.hp, enemy.max_hp, y_offset, (230, 50, 50), 'Enemy HP')
             y_offset += 20
+            y_offset += draw_bar(enemy.hp, enemy.max_hp, y_offset, (230, 50, 50), 'Enemy HP')
         self.screen.blit(surface, (0, self.message_display_bottom))
 
     def parse_item_categories(self):
