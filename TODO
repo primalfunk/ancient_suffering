@@ -1,9 +1,9 @@
 BUGS
 - walking dead
 - fighting stacks of enemies creates zombie enemies
+- infinite leveling after hitting first cap
 
 TODOS
-- slow out the leveling curve
 - different enemy names
 - add adjectives to decorations
 - implement map clear conditions (take artifact to key room)

@@ -5,31 +5,50 @@ class EnemyManager:
     def __init__(self, game_map, player, player_move_count):
         self.game_map = game_map
         self.player = player
+        self.spawn_count = self.game_map.size // 2
         self.enemies = []
-        self.spawn_enemies(10, self.player.level)
+        self.spawn_enemies(self.spawn_count, self.player.level)
         self.player_move_count = player_move_count
 
     def check_chase_player(self):
         for enemy in self.enemies:
             if enemy.current_room == self.player.current_room:
-                # switch the enemy's flag to following
                 enemy.is_following_player = True
 
     def spawn_enemies(self, count, player_level):
         for num in range(count):
-            while True:
+            potential_start, level_indicator = None, None
+            for _ in range(100):  # Limit attempts to avoid infinite loop
                 potential_start = random.choice(list(self.game_map.rooms.values()))
                 if self.is_valid_spawn(potential_start):
-                    enemy_level = random.randint(max(player_level - 1, 1), player_level + 3)
-                    enemy = Enemy(potential_start, enemy_level)
-                    enemy.name = f"Level {enemy_level} Enemy No. {num}"
-                    self.enemies.append(enemy)
+                    level_indicator = random.randint(0, 100)
                     break
+            if not potential_start or level_indicator is None:
+                continue  # Skip if no valid location found
+            enemy_level = self.determine_enemy_level(level_indicator, player_level)
+            enemy = self.create_enemy(potential_start, enemy_level, num)
+            self.enemies.append(enemy)
+            print(enemy.get_stats())
 
+    def determine_enemy_level(self, level_indicator, player_level):
+        if level_indicator < 6:
+            return player_level + 3
+        elif level_indicator < 17:
+            return player_level + 2
+        elif level_indicator < 43:
+            return player_level + 1
+        else:
+            return player_level
+
+    def create_enemy(self, start_position, level, identifier):
+        enemy = Enemy(start_position, level)
+        enemy.name = f"Level {level} Enemy No. {identifier}"
+        return enemy
+      
     def is_valid_spawn(self, start_room):
         # Check distance from player and other enemies
         for other in [self.player] + self.enemies:
-            if abs(start_room.x - other.x) <= 4 and abs(start_room.y - other.y) <= 4:
+            if abs(start_room.x - other.x) <= 3 and abs(start_room.y - other.y) <= 3:
                 return False
         return True
     

@@ -9,8 +9,8 @@ class MapVisualizer:
         self.game_map = game_map
         self.player = player
         self.grid_width_in_cells = self.game_map.size
-        self.border_width = 2
-        self.padding = 2
+        self.border_width = 4
+        self.padding = 10
         # Adjust for additional 10px constraint in both width and height
         additional_constraint = 10
         max_available_width = screen_width / 2 - additional_constraint
