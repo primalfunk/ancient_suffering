@@ -23,10 +23,10 @@ class Combat:
         self.is_over = False
         if is_attacker:
             self.attacker = player
-            self.defender = self.attacker.current_room.enemy
+            self.defender = self.attacker.current_room.enemies[0]
         else:
             self.defender = player
-            self.attacker = self.defender.current_room.enemy
+            self.attacker = self.defender.current_room.enemies[0]
         self.player_damage = 0
         self.message_display.add_message("***** Entering Combat Mode *****", self.ORANGE)
         self.sounds.play_sound('notification', 0.5)
@@ -165,22 +165,19 @@ class Combat:
             self.player.current_room.decorations.append(corpse_item)
             self.player.exp += defeated_enemy.exp
             self.message_display.add_message(f"* {self.player.name} gains {defeated_enemy.exp} experience.")
+            
             if self.player.check_level_up():
                 stat_increases = self.player.level_up()
                 for stat, increase in stat_increases.items():
                     self.message_display.add_message(f"# {self.player.name}'s {stat} increased by {increase}.")
                 self.message_display.add_message(f"# Congratulations, {self.player.name} has leveled up! Your level is {self.player.level}", (20, 240, 20))
                 self.sounds.play_sound('arcane', 0.75)
-        elif self.winner != self.player and self.player.hp <= 0:
+        elif self.winner != self.player or self.player.hp <= 0:
             self.message_display.add_message(f"* {self.player.name} defeated, game over. Press (q) to quit or (r) to restart.", (255, 120, 120))
-            self.disable_inputs_except_quit_restart()
         self.is_over = True
         self.message_display.add_message(f"***** Exited Combat Mode *****", self.ORANGE)
         self.resume_regular_music()
         return self.is_over
-            
-    def disable_inputs_except_quit_restart(self):
-        pass
 
     def init_music(self, volume):
         pygame.mixer.music.load('music/battlemusic.mp3')

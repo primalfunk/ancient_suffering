@@ -2,6 +2,7 @@ import random
 
 class Enemy:
     def __init__(self, start_room, level):
+        self.id = 0
         self.name = ""
         self.xp_reward = 30 # default
         self.x, self.y = start_room.x, start_room.y

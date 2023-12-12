@@ -11,16 +11,11 @@ class MapVisualizer:
         self.grid_width_in_cells = self.game_map.size
         self.border_width = 4
         self.padding = 10
-        # Adjust for additional 10px constraint in both width and height
         additional_constraint = 10
         max_available_width = screen_width / 2 - additional_constraint
         max_available_height = game_manager.screen_height - additional_constraint
-
-        # Use the smaller of the adjusted width or height for cell size calculation
         max_dimension = min(max_available_width, max_available_height)
         total_padding = 2 * self.padding
-
-        # Calculate cell_size considering the smaller dimension
         self.cell_size = int((max_dimension - total_padding) / ((4/3 * self.game_map.size) - 1/3))
         self.connection_size = self.cell_size // 3
         self.region_color_mapping, self.region_colors = self.generate_region_colors()
@@ -31,9 +26,11 @@ class MapVisualizer:
         self.max_lit = len(self.game_map.rooms) * self.max_light_level
         self.current_lit = self.calculate_percent_lit()
         self.x_offset = self.game_manager.map_area_x
+        self.tick_count = 0
+        self.flash_rate = 30
 
     def get_color_intensity(self, base_color, light_level, max_light_level=5):
-        factor = light_level / max_light_level  # Normalizes the light level
+        factor = light_level / max_light_level
         adjusted_color = tuple(min(int(c * factor), 255) for c in base_color)
         return adjusted_color
         
@@ -43,7 +40,6 @@ class MapVisualizer:
             current_player_room.lit = 5
         for dx in range(-visibility_radius, visibility_radius + 1):
             for dy in range(-visibility_radius, visibility_radius + 1):
-                # Skip the player's current location
                 if dx == 0 and dy == 0:
                     continue
                 distance = self.calculate_distance(0, 0, dx, dy)
@@ -54,6 +50,9 @@ class MapVisualizer:
                         room.lit = max(room.lit, light_level)
     
     def draw_map(self, screen):
+        self.tick_count += 1
+        if self.tick_count >= self.flash_rate * 2:
+            self.tick_count = 0
         if self.player.has_map:
             for room in self.game_map.rooms.values():
                 room.lit = self.max_light_level
@@ -68,10 +67,15 @@ class MapVisualizer:
             if room.lit > 0:
                 region_index = self.region_color_mapping.get(room.region, 0)
                 base_room_color = self.region_colors[region_index]
-                base_dead_end_color = (155, 155, 0) # color for dead ends with items in them
+                base_dead_end_color = (155, 155, 0)
                 room_color = self.get_color_intensity(base_room_color, room.lit)
-                if room_pos == (self.player.x, self.player.y):
-                    pygame.draw.rect(screen, (0, 255, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2) # Player's border
+                if self.player.got_relic and room.is_target:
+                    if self.tick_count < self.flash_rate:
+                        room_color = (0, 200, 0)  # Green
+                    else:
+                        room_color = (255, 255, 0) # Yellow
+                elif room_pos == (self.player.x, self.player.y):
+                    pygame.draw.rect(screen, (0, 255, 0), (x-2, y-2, self.cell_size+4, self.cell_size+4), 2)
                     room_color = (0, 0, 255)  # Player's room
                 elif room_pos in enemy_positions:
                     base_enemy_color = (255, 0, 0)  # Enemy's room

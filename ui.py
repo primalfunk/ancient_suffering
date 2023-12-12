@@ -267,7 +267,7 @@ class UI:
         new_state = None
         # Check for enemies
         for enemy in self.game_manager.enemy_manager.enemies:
-            if enemy.current_room == self.game_manager.player.current_room:
+            if enemy.current_room == self.game_manager.player.current_room and enemy in self.game_manager.enemy_manager.enemies:
                 new_state = "enemy"
                 break
         # Check for items only if no enemy is found

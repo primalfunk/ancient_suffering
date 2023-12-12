@@ -1,10 +1,7 @@
-BUGS
-- walking dead
-- fighting stacks of enemies creates zombie enemies
-- infinite leveling after hitting first cap
+BUGS - none? lol
 
 TODOS
-- different enemy names
-- add adjectives to decorations
-- implement map clear conditions (take artifact to key room)
-- code the map change event - the UI should remain unchanged, the player level and gear will be retained, and a new map will be created
+- adjust UI on victory condition to not show the intro text again
+- add state change to show a "level intro" screen, giving the level number
+- calculate map size according to the level number, increasing size with each map
+- balance combat again

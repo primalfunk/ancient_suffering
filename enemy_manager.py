@@ -1,14 +1,20 @@
 from enemy import Enemy
+import json
 import random
 
 class EnemyManager:
     def __init__(self, game_map, player, player_move_count):
+        self.name = ""
         self.game_map = game_map
         self.player = player
         self.spawn_count = self.game_map.size // 2
         self.enemies = []
         self.spawn_enemies(self.spawn_count, self.player.level)
         self.player_move_count = player_move_count
+
+    def load_words(self):
+        with open('words.json') as file:
+            return json.load(file)
 
     def check_chase_player(self):
         for enemy in self.enemies:
@@ -28,7 +34,6 @@ class EnemyManager:
             enemy_level = self.determine_enemy_level(level_indicator, player_level)
             enemy = self.create_enemy(potential_start, enemy_level, num)
             self.enemies.append(enemy)
-            print(enemy.get_stats())
 
     def determine_enemy_level(self, level_indicator, player_level):
         if level_indicator < 6:
@@ -41,12 +46,15 @@ class EnemyManager:
             return player_level
 
     def create_enemy(self, start_position, level, identifier):
+        words = self.load_words()
+        adjective = random.choice(words['adjectives']['enemies']).title()
+        noun = random.choice(words['enemies']).title()
         enemy = Enemy(start_position, level)
-        enemy.name = f"Level {level} Enemy No. {identifier}"
+        enemy.id = identifier
+        enemy.name = f"{adjective} {noun} ( level {level} )"
         return enemy
       
     def is_valid_spawn(self, start_room):
-        # Check distance from player and other enemies
         for other in [self.player] + self.enemies:
             if abs(start_room.x - other.x) <= 3 and abs(start_room.y - other.y) <= 3:
                 return False
@@ -75,7 +83,7 @@ class EnemyManager:
         self.update_enemies_aggro()
         for enemy in self.enemies:
             if self.player_move_count % enemy.speed == 0:
-                if random.random() < 0.87:  # 87% chance to move
+                if random.random() < 0.87:
                     self.move_enemy(enemy)
 
     def move_enemy(self, enemy):

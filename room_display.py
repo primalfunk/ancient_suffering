@@ -1,3 +1,4 @@
+import json
 import pygame
 import random
 
@@ -10,6 +11,16 @@ class RoomDisplay:
         self.last_room_id = None
         self.player_inventory_change = False
         self.to_render = []
+
+    def load_colors(self):
+            with open('words.json') as file:
+                data = json.load(file)
+            return data["adjectives"]["colors"]
+    
+    def load_atmos(self):
+            with open('words.json') as file:
+                data = json.load(file)
+            return data["atmos"]
 
     def wrap_text(self, text, max_width):
         words = text.split(' ')
@@ -52,6 +63,7 @@ class RoomDisplay:
         region_name = region_name.lower()
         items = self.player.current_room.decorations
         region_desc = f"You {random.choice(being)}{self.article_for_word(room_name)}{room_name} in {self.article_for_word(region_name)}{region_name}."
+        region_desc += f" {self.player.current_room.atmo} {self.player.current_room.color}."
         if items:
             items_desc = "You see "
             if len(items) == 1:

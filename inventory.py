@@ -15,6 +15,11 @@ class Inventory:
             self.player.current_room.decorations.remove(item)
             self.sounds.play_sound('inventory', 0.75)
             light_source_changed = False
+            if item in ('reality amulet', 'reality statue', 'reality scroll', 'reality gemstone', 'reality relic'):
+                self.player.got_relic = True
+                target_room = self.player.current_room.get_random_distant_room()
+                # creates the map completion room
+                target_room.is_target = True
             if item in ('lantern', 'torch', 'table lamp'):
                 self.player.visibility_radius = 4
                 light_source_changed = True

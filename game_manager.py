@@ -51,8 +51,25 @@ class GameManager:
             self.map_visualizer.update_light_levels(self.player.visibility_radius)
             self.sounds.play_sound('travel', 0.5)
             self.ui.message_display.add_message(f"Travelled {cardinal_direction} to {new_room.name.title()} ({new_room.x}, {new_room.y})")
+            # condition for reaching the target room
+            if self.player.current_room.is_target:
+                self.victory_conditions()
         else:
             self.ui.message_display.add_message(f"You can't go that way.")
+
+    def victory_conditions(self):
+        # Reset the game map and enemies, clear inventory
+        self.player.inventory.items = []
+        self.game_map = Map(self.size)
+        for room in self.game_map.rooms.values():
+            room.lit = 0
+        start_room = random.choice(list(self.game_map.rooms.values()))
+        self.player.current_room = start_room
+        self.player_move_count = 0
+        self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.width)
+        self.map_visualizer.update_light_levels(self.player.visibility_radius)
+        self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
 
     def update(self):
         # Update game state for a single frame

@@ -31,7 +31,7 @@ class Map:
 
     def create_room(self, pos):
         room_id = len(self.rooms) + 1
-        room = Room(room_id, *pos)
+        room = Room(room_id, *pos, self)
         self.rooms[pos] = room
         self.map_logger.debug(f"Created room with ID: {room_id} at position {pos}")
         return room

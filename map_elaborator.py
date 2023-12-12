@@ -1,6 +1,7 @@
 import json
 import logging
 from region_assignment import RegionAssignment
+from room_atmos import RoomAtmos
 from room_decoration import RoomDecoration
 from object_distribution import ObjectDistribution
 
@@ -20,5 +21,9 @@ class MapElaborator:
         self.object_distribution.distribute_items()
 
         self.room_decoration = RoomDecoration(self.map, data)
-        self.map_logger .debug("Rooms decorated, distributing objects...")
+        self.map_logger.debug("Rooms decorated, distributing objects...")
         self.room_decoration.decorate_rooms()
+
+        self.room_atmos = RoomAtmos(self.map, data)
+        self.map_logger.debug("Objects distributed, adding atmosphere...")
+        self.room_atmos.create_atmosphere()

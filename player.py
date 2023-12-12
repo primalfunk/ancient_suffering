@@ -9,9 +9,10 @@ class Player:
         self.x, self.y = start_room.x, start_room.y
         self.current_room = start_room
         self.in_combat = False
+        self.got_relic = False
         self.name = "PLAYER"
         self.level = max(level, 1)
-        self.initialize_stats_based_on_level() # level 1 only
+        self.initialize_stats_based_on_level() # lvl one for player
         self.inventory = Inventory(self, game_manager)
         self.equipped_weapon = None
         self.equipped_armor = None
@@ -19,6 +20,7 @@ class Player:
         self.has_compass = False
         self.visibility_radius_changed = False
         self.visibility_radius = 3
+        self.calculate_exp_requirements()
         
     def initialize_stats_based_on_level(self):
         self.atk = 10
@@ -43,7 +45,7 @@ class Player:
 
     def can_move(self, direction, game_map):
         current_room = game_map.rooms[(self.x, self.y)]
-        if direction in current_room.connections and current_room.connections[direction] is not None:
+        if direction in current_room.connections and current_room.connections[direction] is not None and self.hp > 0: # can only move if not dead!
             return True
         return False
     
@@ -92,16 +94,17 @@ class Player:
     
     def calculate_exp_requirements(self):
         base_exp = 50
-        target_exp_at_100 = 1000000 
+        target_exp_at_100 = 1000000
         growth_factor = (target_exp_at_100 / base_exp) ** (1 / 98)
-        self.exp_requirements = [base_exp]
-        for lvl in range(2, self.level + 1):
+        cumulative_exp = 0  # Initialize cumulative experience
+        self.exp_requirements = [cumulative_exp]
+        for lvl in range(1, self.level + 1):
             next_exp = base_exp * (growth_factor ** (lvl - 1))
-            self.exp_requirements.append(int(next_exp))
+            cumulative_exp += int(next_exp)  # Accumulate the experience required
+            self.exp_requirements.append(cumulative_exp)
 
     def check_level_up(self):
-        # Ensure exp_requirements is up to date
         self.calculate_exp_requirements()
-        if self.level < 100 and self.exp >= self.exp_requirements[self.level - 1]:
+        if self.level < 100 and self.exp >= self.exp_requirements[self.level]:
             return True
         return False
