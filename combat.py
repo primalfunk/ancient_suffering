@@ -142,35 +142,22 @@ class Combat:
         else:
             self.winner = None
         winner_name = self.winner.name if self.winner else "None"
-        self.message_display.add_message(f"* Combat has ended. Winner: {winner_name}")
+        self.message_display.add_message(f"* Combat has ended. Winner: {winner_name}", self.ORANGE)
         self.message_display.add_message(f"* The battle lasted {self.round_count // 2} rounds; {self.player.name} dealt {self.player_damage} damage.")
 
     def combat_over(self):
         pygame.mixer.music.stop()
-        while pygame.mixer.get_busy():
-                pygame.time.delay(100)
-        
-        # Handling the combat outcome
         if self.winner == self.player:
-            # Player wins the combat
-            while pygame.mixer.get_busy():
-                pygame.time.delay(100)
-            # finish playing victory song before moving on
             defeated_enemy = self.defender if self.is_player_attacker else self.attacker
             self.message_display.add_message(f"* {self.player.name} has defeated {defeated_enemy.name}.")
-            
-            # Remove defeated enemy from the game
             if defeated_enemy in self.enemy_manager.enemies:
                 self.enemy_manager.enemies.remove(defeated_enemy)
             if defeated_enemy in self.player.current_room.enemies:
                 self.player.current_room.enemies.remove(defeated_enemy)
-                # Convert defeated enemy to a decoration
             corpse_item = f"corpse ({defeated_enemy.name})"
             self.player.current_room.decorations.append(corpse_item)
-            # Award experience to the player
             self.player.exp += defeated_enemy.exp
             self.message_display.add_message(f"* {self.player.name} gains {defeated_enemy.exp} experience.")
-            # Check for level up
             self.sounds.play_sound('win', 0.75)
             while pygame.mixer.get_busy():
                 pygame.time.delay(100)
@@ -178,10 +165,9 @@ class Combat:
                 stat_increases = self.player.level_up()
                 for stat, increase in stat_increases.items():
                     self.message_display.add_message(f"# {self.player.name}'s {stat} increased by {increase}.")
-                self.message_display.add_message(f"# Congratulations, {self.player.name} has leveled up! Your level is {self.player.level}", (20, 255, 20))
+                self.message_display.add_message(f"# Congratulations, {self.player.name} has leveled up! Your level is {self.player.level}", (20, 240, 20))
                 self.sounds.play_sound('arcane', 0.75)
         elif self.winner != self.player and self.player.hp <= 0:
-            # Player is defeated
             self.sounds.play_sound('gameover', 0.75)
             self.message_display.add_message(f"* {self.player.name} defeated, game over. Press (q) to quit or (r) to restart.", (255, 120, 120))
             self.disable_inputs_except_quit_restart()

@@ -300,25 +300,30 @@ class UI:
             for item in self.player.current_room.decorations:
                 item_category = self.item_category_map.get(item, '')
                 if not self.player.inventory.full:
+                    
                     if item_category in {'T', 'K'}:
-                        if self.player.inventory.add_item(item): # attempts to add the item to inventory
-                            self.player.current_room.decorations.remove(item) # remove from room
-                            self.room_display.player_inventory_change = True # signal the inventory change so it can be redrawn
+                        
+                        if self.player.inventory.add_item(item):
+                            self.room_display.player_inventory_change = True 
                             self.message_display.add_message(f"You picked up the {item}.")
+                    
                     if item_category in {'W'} and self.player.equipped_weapon is None:
                         self.room_display.player_inventory_change = True
                         self.player.equip_item(item, item_category)
                         self.message_display.add_message(f"You equipped the {item}.")
+                    
                     elif item_category in {'A'} and self.player.equipped_armor is None:
                         self.room_display.player_inventory_change = True
                         self.player.equip_item(item, item_category)
                         self.message_display.add_message(f"You equipped the {item}.")
+                    
                     elif item_category in {'W'} and self.player.equipped_weapon is not None:
                         self.room_display.player_inventory_change = True
                         self.message_display.add_message(f"You dropped the {self.player.equipped_weapon}.")
                         self.player.unequip_item(self.player.equipped_weapon, item_category)
                         self.player.equip_item(item, item_category)
                         self.message_display.add_message(f"You equipped the {item}.")
+                    
                     elif item_category in {'A'} and self.player.equipped_armor is not None:
                         self.room_display.player_inventory_change = True
                         self.message_display.add_message(f"You dropped the {self.player.equipped_armor}.")
@@ -326,6 +331,7 @@ class UI:
                         self.message_display.add_message(f"You equipped the {item}.")
                         self.player.equip_item(item, item_category)
                     self.room_display.display_room_info(self.screen)
+                
                 else:
                     self.message_display.add_message(f"Your inventory is full.")
                 break

@@ -4,15 +4,24 @@ import random
 
 class MapVisualizer:
     def __init__(self, game_manager, game_map, player, screen_width):
+        self.screen = game_manager.screen
         self.game_manager = game_manager
         self.game_map = game_map
         self.player = player
         self.grid_width_in_cells = self.game_map.size
         self.border_width = 2
         self.padding = 2
-        max_available_width = screen_width / 2
+        # Adjust for additional 10px constraint in both width and height
+        additional_constraint = 10
+        max_available_width = screen_width / 2 - additional_constraint
+        max_available_height = game_manager.screen_height - additional_constraint
+
+        # Use the smaller of the adjusted width or height for cell size calculation
+        max_dimension = min(max_available_width, max_available_height)
         total_padding = 2 * self.padding
-        self.cell_size = int((max_available_width - total_padding) / ((4/3 * self.game_map.size) - 1/3))
+
+        # Calculate cell_size considering the smaller dimension
+        self.cell_size = int((max_dimension - total_padding) / ((4/3 * self.game_map.size) - 1/3))
         self.connection_size = self.cell_size // 3
         self.region_color_mapping, self.region_colors = self.generate_region_colors()
         self.dead_ends = [room for room in self.game_map.rooms.values() if sum(1 for conn in room.connections.values() if conn) == 1]
@@ -21,8 +30,30 @@ class MapVisualizer:
         self.max_light_level = 5
         self.max_lit = len(self.game_map.rooms) * self.max_light_level
         self.current_lit = self.calculate_percent_lit()
+        self.x_offset = self.game_manager.map_area_x
 
-    def draw_map(self, screen, offset_x, width, height):
+    def get_color_intensity(self, base_color, light_level, max_light_level=5):
+        factor = light_level / max_light_level  # Normalizes the light level
+        adjusted_color = tuple(min(int(c * factor), 255) for c in base_color)
+        return adjusted_color
+        
+    def update_light_levels(self, visibility_radius):
+        current_player_room = self.game_map.rooms.get((self.player.x, self.player.y))
+        if current_player_room:
+            current_player_room.lit = 5
+        for dx in range(-visibility_radius, visibility_radius + 1):
+            for dy in range(-visibility_radius, visibility_radius + 1):
+                # Skip the player's current location
+                if dx == 0 and dy == 0:
+                    continue
+                distance = self.calculate_distance(0, 0, dx, dy)
+                if distance <= visibility_radius:
+                    room = self.game_map.rooms.get((self.player.x + dx, self.player.y + dy))
+                    if room:
+                        light_level = min(5 - int(distance), 4)
+                        room.lit = max(room.lit, light_level)
+    
+    def draw_map(self, screen):
         if self.player.has_map:
             for room in self.game_map.rooms.values():
                 room.lit = self.max_light_level
@@ -31,7 +62,7 @@ class MapVisualizer:
         enemy_positions = {(enemy.x, enemy.y) for enemy in self.game_manager.enemy_manager.enemies}
         
         for room in self.game_map.rooms.values():
-            x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
+            x = room.x * (self.cell_size + self.connection_size) + self.padding + self.x_offset
             y = room.y * (self.cell_size + self.connection_size) + self.padding
             room_pos = (room.x, room.y)
             if room.lit > 0:
@@ -61,14 +92,9 @@ class MapVisualizer:
                     if connected_room and (connected_room.x, connected_room.y) in self.explored:
                         self.draw_connection(screen, x, y, direction, room_color)
 
-    def draw_all_connections(self, screen, offset_x):
+    def draw_all_connections(self):
         for room in self.game_map.rooms.values():
-            x = room.x * (self.cell_size + self.connection_size) + self.padding + offset_x
-            y = room.y * (self.cell_size + self.connection_size) + self.padding
-            room_color = self.get_room_color(room)
-            for direction, connected_room in room.connections.items():
-                if connected_room:
-                    self.draw_connection(screen, x, y, direction, room_color)
+            self.explored.add((room.x, room.y))
 
     def get_room_color(self, room):
         region_index = self.region_color_mapping.get(room.region, 0)
@@ -121,22 +147,6 @@ class MapVisualizer:
                         else:
                             light_level = 1
 
-                        room.lit = max(room.lit, light_level)
-        
-    def get_color_intensity(self, base_color, light_level, max_light_level=5):
-        factor = light_level / max_light_level  # Normalizes the light level
-        adjusted_color = tuple(min(int(c * factor), 255) for c in base_color)
-        return adjusted_color
-        
-    def update_light_levels(self, visibility_radius):
-        visibility_radius
-        for dx in range(-visibility_radius, visibility_radius + 1):
-            for dy in range(-visibility_radius, visibility_radius + 1):
-                distance = self.calculate_distance(0, 0, dx, dy)
-                if distance <= visibility_radius:
-                    room = self.game_map.rooms.get((self.player.x + dx, self.player.y + dy))
-                    if room:
-                        light_level = visibility_radius - int(distance)
                         room.lit = max(room.lit, light_level)
 
     def calculate_percent_lit(self):

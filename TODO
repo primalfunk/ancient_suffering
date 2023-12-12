@@ -1,8 +1,10 @@
+BUGS
+- walking dead
+- fighting stacks of enemies creates zombie enemies
+
 TODOS
+- slow out the leveling curve
 - different enemy names
 - add adjectives to decorations
 - implement map clear conditions (take artifact to key room)
 - code the map change event - the UI should remain unchanged, the player level and gear will be retained, and a new map will be created
-
-BUGS
-

@@ -20,7 +20,7 @@ class EnemyManager:
             while True:
                 potential_start = random.choice(list(self.game_map.rooms.values()))
                 if self.is_valid_spawn(potential_start):
-                    enemy_level = random.randint(max(player_level - 1, 1), player_level + 1)
+                    enemy_level = random.randint(max(player_level - 1, 1), player_level + 3)
                     enemy = Enemy(potential_start, enemy_level)
                     enemy.name = f"Level {enemy_level} Enemy No. {num}"
                     self.enemies.append(enemy)

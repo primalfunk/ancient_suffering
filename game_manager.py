@@ -10,12 +10,14 @@ from ui import UI
 
 class GameManager:
     def __init__(self, screen, width, height):
+        self.size = 25
         self.boot_logger = logging.getLogger('boot')
-        self.game_map = Map(35)
+        self.game_map = Map(self.size)
         self.screen = screen
         self.width = width
         self.height = height
         self.screen_width = width
+        self.map_area_x = self.screen_width // 2
         self.screen_height = height
         self.combat = None
         self.staggered_enemies = False
@@ -27,7 +29,7 @@ class GameManager:
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room, self)
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
-        self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.screen_width)
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.width)
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
         pygame.display.set_caption("The Lords of Chaos")
         self.current_state = "title_screen"
@@ -57,10 +59,8 @@ class GameManager:
         self.screen.fill((0, 0, 0))
         self.ui.room_display.display_room_info(self.screen)
         self.ui.update_ui()
-        map_area_width = self.screen_width // 2
-        map_area_height = int(self.screen_height * 0.75)
-        map_area_x = self.screen_width // 2
-        self.map_visualizer.draw_map(self.screen, offset_x=map_area_x, width=map_area_width, height=map_area_height)
+        self.map_area_x = self.screen_width // 2
+        self.map_visualizer.draw_map(self.screen)
         self.check_for_combat()
         pygame.display.flip()
 
@@ -74,14 +74,14 @@ class GameManager:
     
     def restart_game(self):
         self.boot_logger.debug("Restarting game...")
-        self.game_map = Map(25)
+        self.game_map = Map(self.size)
         for room in self.game_map.rooms.values():
             room.lit = 0 
         start_room = random.choice(list(self.game_map.rooms.values()))
         self.player = Player(start_room, self)
         self.player_move_count = 0
         self.enemy_manager = EnemyManager(self.game_map, self.player, self.player_move_count)
-        self.map_visualizer = MapVisualizer(self, self.game_map, self.player)
+        self.map_visualizer = MapVisualizer(self, self.game_map, self.player, self.width)
         self.map_visualizer.update_light_levels(self.player.visibility_radius)
         self.ui = UI(self.screen, self.player, self.screen_width, self.screen_height, self)
         self.boot_logger.debug("Game restarted successfully.")
@@ -127,10 +127,7 @@ class GameManager:
         pygame.draw.rect(lower_ui_surface, border_color, lower_ui_surface.get_rect(), 2)
         surface.blit(lower_ui_surface, (0, self.screen_height * 3 // 4))
         self.ui.message_display.render(surface)
-        map_area_width = self.screen_width // 2
-        map_area_height = int(self.screen_height * 0.8)
-        map_area_x = self.screen_width // 2
-        self.map_visualizer.draw_map(surface, offset_x=map_area_x, width=map_area_width, height=map_area_height)
+        self.map_visualizer.draw_map(surface)
         self.ui.draw_hp_bar()
 
     def check_for_combat(self):
